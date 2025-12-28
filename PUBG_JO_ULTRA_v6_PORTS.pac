@@ -6,7 +6,7 @@
 
 // ===================== 🔧 CORE PROXY CONFIGURATION =====================
 var PROXY_PRIMARY = "PROXY 212.35.66.45:3128";
-var PROXY_SECOND = "PROXY 91.106.109.12:3128";
+var PROXY_SECOND = "PROXY 91.106.109.12:8080";
 var DIRECT = "DIRECT";
 
 // ===================== 🎯 PUBG PORT DISTRIBUTION (Lobby / Match / Voice) =====================
