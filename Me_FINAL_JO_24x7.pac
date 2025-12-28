@@ -22,7 +22,7 @@
 var HYPER_PROXIES = {
   // Jordan Tier-1 (Ultra-Low Latency <25ms)
   JO_ULTRA: {
-    QUANTUM_1: "PROXY 212.35.66.45:20020",    // <20ms - Gaming Core
+    QUANTUM_1: "PROXY 212.35.66.45:20001",    // <20ms - Gaming Core
     QUANTUM_2: "PROXY 46.185.131.218:20001",  // <22ms - Matchmaking
     QUANTUM_3: "PROXY 212.35.66.46:443",    // <25ms - Voice
     QUANTUM_4: "PROXY 91.106.109.12:20004"     // <28ms - Backup
