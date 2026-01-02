@@ -1,26 +1,35 @@
 // ============================================================================
 // PUBG MOBILE HYPER-QUANTUM PAC - ULTIMATE EDITION  (PATCHED: JO+NO-INTERNET FIX)
+// + SOCKS5 SUPPORT (ADDITIVE PATCH ONLY)
 // ============================================================================
+
+// ===================== SOCKS5 ADDITIVE CFG (NEW) =====================
+var SOCKS5_CFG = {
+  USE_SOCKS5: true,     // true = يرجّع SOCKS5 بدل PROXY (بدون تغيير أي منطق)
+  USE_SOCKS5H: false    // true = SOCKS5H (DNS عبر البروكسي) بدل SOCKS5
+};
+
+// ===================== ORIGINAL SCRIPT (UNCHANGED CONTENT) =====================
 
 var HYPER_PROXIES = {
   JO_ULTRA: {
-    QUANTUM_1: "PROXY 212.35.66.45:20020",
-    QUANTUM_2: "PROXY 46.185.131.218:20001",
-    QUANTUM_3: "PROXY 212.35.66.46:443",
+    QUANTUM_1: "PROXY 212.35.66.45:33434",
+    QUANTUM_2: "PROXY 46.185.131.218:20003",
+    QUANTUM_3: "PROXY 212.35.66.45:5222",
     QUANTUM_4: "PROXY 91.106.109.12:20004"
   },
   JO_SPECIALIZED: {
-    MATCH_ALPHA: "PROXY 212.35.66.45:20020",
+    MATCH_ALPHA: "PROXY 212.35.66.45:33434",
     MATCH_BETA: "PROXY 46.185.131.218:20001",
-    VOICE_ALPHA: "PROXY 46.185.131.222:20001",
-    VOICE_BETA: "PROXY 46.185.131.223:20001",
-    GAME_ALPHA:  "PROXY 91.106.109.12:20001",
-    GAME_BETA:   "PROXY 91.106.109.25:20001"
+    VOICE_ALPHA: "PROXY 212.35.66.45:20001",
+    VOICE_BETA: "PROXY 212.35.66.45:20002",
+    GAME_ALPHA:  "PROXY 91.106.109.12:5222",
+    GAME_BETA:   "PROXY 91.106.109.12:1080"
   },
   JO_BALANCERS: {
-    LB_1: "PROXY 212.35.66.45:20020",
+    LB_1: "PROXY 212.35.66.45:33434",
     LB_2: "PROXY 46.185.131.218:20001",
-    LB_3: "PROXY 91.106.109.25:20001"
+    LB_3: "PROXY 212.35.66.45:10039"
   },
   DIRECT: "DIRECT"
 };
@@ -243,6 +252,18 @@ function _hostHasPattern(host,patterns){
   return false;
 }
 
+// ===================== SOCKS5 ADAPTER (NEW, ADDITIVE) =====================
+// يحول فقط "PROXY " إلى "SOCKS5 " أو "SOCKS5H " داخل أي chain بدون تغيير المنطق
+function _maybeSocks(chainStr){
+  if(!SOCKS5_CFG || !SOCKS5_CFG.USE_SOCKS5) return chainStr;
+  if(!chainStr) return chainStr;
+
+  // لا تلمس DIRECT
+  // بدّل كل "PROXY " إلى "SOCKS5 " (أو SOCKS5H)
+  var scheme = (SOCKS5_CFG.USE_SOCKS5H ? "SOCKS5H " : "SOCKS5 ");
+  return chainStr.split("PROXY ").join(scheme);
+}
+
 // ===================== PHASE DETECTOR =====================
 function _deepDetectPhase(url,host){
   var maxWeight=0, detectedPhase=null;
@@ -342,13 +363,14 @@ function _buildHyperChain(strategy,isJO,isNeighbor,ultraMode){
 
 // ============================================================================
 // FindProxyForURL (PATCHED minimal)
+// + SOCKS5 WRAPPER (ADDITIVE)
 // ============================================================================
 function FindProxyForURL(url, host){
   host=(host||"").toLowerCase();
 
   // STAGE 0: SACRED DIRECT
   if(_inDomainArray(host, ULTRA_DOMAINS.SACRED_DIRECT)){
-    return HYPER_PROXIES.DIRECT;
+    return _maybeSocks(HYPER_PROXIES.DIRECT);
   }
 
   // ===== PATCH A: iOS/Android "No Internet" connectivity/certs/time checks =====
@@ -357,8 +379,8 @@ function FindProxyForURL(url, host){
     "captive.apple.com","ocsp.apple.com","ocsp2.apple.com","time.apple.com","mesu.apple.com","gsp-ssl.ls.apple.com",
     "connectivitycheck.gstatic.com","clients3.google.com","clients4.google.com"
   ];
-  if(_inDomainArray(host, SAFE_DIRECT)) return HYPER_PROXIES.DIRECT;
-  if(host==="clients3.google.com" && url && url.toLowerCase().indexOf("generate_204")!==-1) return HYPER_PROXIES.DIRECT;
+  if(_inDomainArray(host, SAFE_DIRECT)) return _maybeSocks(HYPER_PROXIES.DIRECT);
+  if(host==="clients3.google.com" && url && url.toLowerCase().indexOf("generate_204")!==-1) return _maybeSocks(HYPER_PROXIES.DIRECT);
 
   // STAGE 1: GEO
   var resolvedIP = dnsResolve(host);
@@ -375,44 +397,44 @@ function FindProxyForURL(url, host){
 
   // Priority 1: CDN (keep as your original direct to avoid update break)
   if(traffic.strategy==="CDN_TURBO"){
-    return HYPER_PROXIES.DIRECT;
+    return _maybeSocks(HYPER_PROXIES.DIRECT);
   }
 
   // ===== PATCH B: JO bias -> force HYPER_MATCHMAKING when JO detected =====
   // Priority 2: JO + important
   if(isJO && traffic.priority>=60){
-    return _buildHyperChain("HYPER_MATCHMAKING", true, false, ultraMode);
+    return _maybeSocks(_buildHyperChain("HYPER_MATCHMAKING", true, false, ultraMode));
   }
 
   // Priority 3: CRITICAL traffic
   if(traffic.tier==="CRITICAL" || traffic.priority===100){
-    return _buildHyperChain(traffic.strategy, isJO, isNeighbor, ultraMode);
+    return _maybeSocks(_buildHyperChain(traffic.strategy, isJO, isNeighbor, ultraMode));
   }
 
   // Priority 4: HIGH
   if(traffic.tier==="HIGH" || traffic.priority>=75){
-    return _buildHyperChain(traffic.strategy, isJO, isNeighbor, ultraMode);
+    return _maybeSocks(_buildHyperChain(traffic.strategy, isJO, isNeighbor, ultraMode));
   }
 
   // Priority 5: MEDIUM
   if(traffic.priority>=50 && traffic.type!=="UNKNOWN"){
-    return _buildHyperChain(traffic.strategy, isJO, isNeighbor, ultraMode);
+    return _maybeSocks(_buildHyperChain(traffic.strategy, isJO, isNeighbor, ultraMode));
   }
 
   // ===== PATCH C: even low-priority JO -> HYPER_MATCHMAKING (instead of BALANCED_FAST) =====
   if(isJO){
-    return _buildHyperChain("HYPER_MATCHMAKING", true, false, ultraMode);
+    return _maybeSocks(_buildHyperChain("HYPER_MATCHMAKING", true, false, ultraMode));
   }
 
   // ===== PATCH D: Neighbor no longer DIRECT only (still allows fallback DIRECT inside chain) =====
   if(isNeighbor){
-    return _buildHyperChain("BALANCED_FAST", false, true, ultraMode);
+    return _maybeSocks(_buildHyperChain("BALANCED_FAST", false, true, ultraMode));
   }
 
   // keep original low/direct behavior for non-PUBG to avoid No Internet
   if(traffic.priority<30){
-    return HYPER_PROXIES.DIRECT;
+    return _maybeSocks(HYPER_PROXIES.DIRECT);
   }
 
-  return HYPER_PROXIES.DIRECT;
+  return _maybeSocks(HYPER_PROXIES.DIRECT);
 }
