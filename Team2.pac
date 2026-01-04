@@ -1,6 +1,6 @@
 // ============================================================================
-// PUBG MOBILE — JO-MATCHMAX (iOS/PAC SAFE ES5)
-// هدف النسخة: Matchmaking أردني أعلى + ثبات NAT أعلى + أقل تشتت مسار
+// PUBG MOBILE — JO FIRST → GULF/ME FALLBACK → EUROPE BLOCKED (NO-DIRECT)
+// iOS / WebKit PAC SAFE (ES5)
 // ============================================================================
 
 // ===================== PROXIES (IPs فقط) =====================
@@ -12,17 +12,47 @@ var PROXIES = {
   JO_5: "77.245.9.11"
 };
 
-// ===================== PORT FALLBACK (ثبات + توافق أعلى) =====================
+// ===================== PORTS (Fallback) =====================
 var PORTS = {
-  MATCH:   ["10012"],
+  MATCH:   ["10012", "443", "8080"],
   VOICE:   ["20001", "443"],
-  GAME:    ["10039"],
+  GAME:    ["10039", "443"],
   LOBBY:   ["443", "8080"],
   GENERAL: ["8080", "443"]
 };
 
+// ===================== BLOCK (NO EUROPE) =====================
+var BLOCK = "PROXY 0.0.0.0:0";
+
+// كلمات مفتاحية لأوروبا — أي ظهور = منع
+var BLOCK_EU_KEYWORDS = [
+  "-eu-", ".eu.", "europe", "eu-west", "eu-central",
+  "frankfurt", "paris", "london", "amsterdam", "berlin",
+  "milan", "madrid", "stockholm", "warsaw", "vienna",
+  "ireland", "dublin", "zurich", "geneva", "prague"
+];
+
+// CIDR مختصرة لأشهر مناطق AWS/GCP الأوروبية (تقوية منع أوروبا)
+var EU_BLOCK_RANGES = [
+  "3.120.0.0/13",   // AWS Frankfurt
+  "18.184.0.0/15",  // AWS EU
+  "35.156.0.0/14",  // AWS EU
+  "52.28.0.0/14",   // AWS EU
+  "34.89.0.0/16",   // GCP EU (مختصر)
+  "34.107.0.0/16"   // GCP (مختصر)
+];
+
+// إشارات الخليج/الشرق الأوسط (fallback إذا مش JO)
+var GULF_KEYWORDS = [
+  "me", "middleeast", "mideast", "gcc",
+  "dubai", "uae", "abudhabi", "sharjah",
+  "saudi", "ksa", "riyadh", "jeddah", "dammam",
+  "kuwait", "qatar", "doha", "bahrain", "oman", "muscat",
+  "iraq", "baghdad", "lebanon", "beirut", "palestine", "gaza"
+];
+
 // ============================================================================
-// JO NETWORKS (كما هي من عندك)
+// JO NETWORKS (كما عندك)
 // ============================================================================
 var JO_NETWORKS = {
   MAJOR: [
@@ -86,7 +116,6 @@ var PUBG = {
     "loading", "spawn", "sync", "state", "action", "fire", "move"
   ],
 
-  // NOTE: بالنسخة JO-MATCHMAX ما بنخلي CDN/telemetry DIRECT إذا كان تبع PUBG
   LOW_KEYWORDS: [
     "cdn", "static", "img", "image", "asset", "resource", "download",
     "update", "patch", "analytics", "telemetry", "tracking", "metrics"
@@ -94,21 +123,7 @@ var PUBG = {
 };
 
 // ============================================================================
-// DIRECT SAFE (اتصالات النظام فقط)
-// ============================================================================
-var ALWAYS_DIRECT = [
-  "captive.apple.com", "ocsp.apple.com", "time.apple.com",
-  "connectivitycheck.gstatic.com", "clients3.google.com"
-];
-
-// اختياري: إذا بدك GitHub/YouTube دايمًا DIRECT
-var OPTIONAL_DIRECT = [
-  "github.com", "raw.githubusercontent.com", "gist.githubusercontent.com",
-  "youtube.com", "googlevideo.com", "ytimg.com", "youtubei.googleapis.com"
-];
-
-// ============================================================================
-// DNS CACHE (خفيف)
+// DNS CACHE
 // ============================================================================
 var DNS_CACHE = {
   cache: {},
@@ -136,9 +151,7 @@ var DNS_CACHE = {
   }
 };
 
-// ============================================================================
-// Known IPs (كما عندك)
-// ============================================================================
+// Known IPs (اختياري)
 var PUBG_KNOWN_IPS = {
   "match.pubgmobile.com": "212.35.66.45",
   "voice.igamecj.com": "91.106.109.12",
@@ -146,7 +159,7 @@ var PUBG_KNOWN_IPS = {
 };
 
 // ============================================================================
-// SESSION LOCK (قفل مسار للماتش/التجنيد)
+// SESSION LOCK (MATCH/RECRUIT)
 // ============================================================================
 var SESSION = {
   matchProxyChain: null,
@@ -164,11 +177,6 @@ var SESSION = {
   setMatch: function(chain) {
     this.matchProxyChain = chain;
     this.matchStart = new Date().getTime();
-  },
-
-  clear: function() {
-    this.matchProxyChain = null;
-    this.matchStart = 0;
   }
 };
 
@@ -179,7 +187,7 @@ function ipToNum(ip) {
   var p = (ip || "").split(".");
   if (p.length !== 4) return 0;
   return ((parseInt(p[0],10) << 24) | (parseInt(p[1],10) << 16) |
-          (parseInt(p[2],10) << 8) |  parseInt(p[3],10)) >>> 0;
+          (parseInt(p[2],10) << 8) | parseInt(p[3],10)) >>> 0;
 }
 
 function inCidr(ip, cidr) {
@@ -233,35 +241,41 @@ function hasKeyword(text, keywords) {
   return false;
 }
 
-// chain with port fallback (يحافظ على نفس proxy ترتيبًا)
-function buildChainWithPorts(proxyList, portList, includeDirect) {
+function buildChainWithPorts(proxyList, portList) {
   var chain = [];
   for (var i = 0; i < proxyList.length; i++) {
     for (var p = 0; p < portList.length; p++) {
       chain.push("PROXY " + proxyList[i] + ":" + portList[p]);
     }
   }
-  if (includeDirect) chain.push("DIRECT");
   return chain.join("; ");
 }
 
-// Match ID (اختياري)
-function extractMatchId(url) {
-  var patterns = [
-    /match[*-]?id[=:]([a-zA-Z0-9-]+)/i,
-    /room[*-]?id[=:]([a-zA-Z0-9-]+)/i,
-    /game[_-]?id[=:]([a-zA-Z0-9-]+)/i
-  ];
-  for (var i = 0; i < patterns.length; i++) {
-    var m = (url || "").match(patterns[i]);
-    if (m) return m[1];
+function isEUHost(host, url) {
+  var t = (host + " " + (url || "")).toLowerCase();
+  for (var i = 0; i < BLOCK_EU_KEYWORDS.length; i++) {
+    if (t.indexOf(BLOCK_EU_KEYWORDS[i]) !== -1) return true;
   }
-  return null;
+  return false;
 }
 
-// ============================================================================
-// Classify
-// ============================================================================
+function isEUIP(ip) {
+  if (!ip || ip === "0.0.0.0") return false;
+  for (var i = 0; i < EU_BLOCK_RANGES.length; i++) {
+    if (inCidr(ip, EU_BLOCK_RANGES[i])) return true;
+  }
+  return false;
+}
+
+function isGulfHint(host, url) {
+  var t = (host + " " + (url || "")).toLowerCase();
+  for (var i = 0; i < GULF_KEYWORDS.length; i++) {
+    if (t.indexOf(GULF_KEYWORDS[i]) !== -1) return true;
+  }
+  // افتراضي: نعتبرها Gulf/ME بدل تركها تروح EU
+  return true;
+}
+
 function classify(host, url) {
   var u = (url || "").toLowerCase();
   var combined = (host || "") + " " + u;
@@ -272,87 +286,79 @@ function classify(host, url) {
   var isGame  = hasKeyword(combined, PUBG.GAME_KEYWORDS);
   var isLow   = hasKeyword(combined, PUBG.LOW_KEYWORDS);
 
-  // Match/Recruit أعلى أولوية
   if (isMatch) return { type: "MATCH", ports: PORTS.MATCH, urgent: true, pubg: isPubgDomain };
-
-  // Voice
   if (isVoice) return { type: "VOICE", ports: PORTS.VOICE, urgent: true, pubg: isPubgDomain };
+  if (isGame)  return { type: "GAME",  ports: PORTS.GAME,  urgent: true, pubg: isPubgDomain };
 
-  // Game realtime
-  if (isGame) return { type: "GAME", ports: PORTS.GAME, urgent: true, pubg: isPubgDomain };
+  if (isPubgDomain) return { type: isLow ? "PUBG_LOW" : "PUBG", ports: PORTS.LOBBY, urgent: false, pubg: true };
 
-  // PUBG non-urgent
-  if (isPubgDomain) {
-    // حتى لو LOW (cdn/telemetry) خليه عبر proxy (مش DIRECT) عشان ما يطلع المسار
-    return { type: isLow ? "PUBG_LOW" : "PUBG", ports: PORTS.LOBBY, urgent: false, pubg: true };
-  }
-
-  // Non-PUBG
   if (isLow) return { type: "LOW", ports: PORTS.GENERAL, urgent: false, pubg: false };
   return { type: "OTHER", ports: PORTS.GENERAL, urgent: false, pubg: false };
 }
 
 // ============================================================================
-// MAIN
+// MAIN — JO FIRST → GULF/ME → EU BLOCKED — NO DIRECT
 // ============================================================================
 function FindProxyForURL(url, host) {
   host = (host || "").toLowerCase();
-  var urlL = (url || "").toLowerCase();
 
-  // 0) system connectivity direct
-  if (inDomainList(host, ALWAYS_DIRECT)) return "DIRECT";
-  if (host === "clients3.google.com" && urlL.indexOf("generate_204") !== -1) return "DIRECT";
+  // (3) ❌ أوروبا ممنوعة من الاسم/الـ URL
+  if (isEUHost(host, url)) return BLOCK;
 
-  // optional direct for github/youtube (only if NOT PUBG)
-  if (inDomainList(host, OPTIONAL_DIRECT)) return "DIRECT";
-
-  // 1) classify
   var t = classify(host, url);
 
-  // 2) Non-PUBG LOW => DIRECT (خفف ضغط)
-  if (!t.pubg && t.type === "LOW") return "DIRECT";
-
-  // 3) Resolve فقط لما نحتاج (PUBG / MATCHMAX)
-  // لو هو PUBG أو urgent، نحاول نعرف إذا IP أردني
+  // Resolve فقط لـ PUBG/urgent (لتخفيف الضغط على iOS)
   var resolvedIP = PUBG_KNOWN_IPS[host] || (t.pubg || t.urgent ? DNS_CACHE.resolve(host) : null);
+
+  // (3) ❌ أوروبا ممنوعة من الـ IP
+  if (resolvedIP && isEUIP(resolvedIP)) return BLOCK;
+
+  // (1) 🇯🇴 الأردن أولاً
   var isJO = resolvedIP ? isJordanian(resolvedIP) : false;
 
-  // 4) JO-MATCHMAX: MATCH/RECRUIT/QUEUE = session lock قوي على JO_1
+  // ===================== MATCH / RECRUIT =====================
   if (t.type === "MATCH") {
     var locked = SESSION.getMatch();
     if (locked) return locked;
 
-    // إذا IP أردني أو حتى غير واضح، إحنا بدنا JO ثابت
-    var matchChain = buildChainWithPorts(
-      [PROXIES.JO_1, PROXIES.JO_2], // ثبات + احتياط
-      t.ports,
-      true
-    );
+    if (isJO) {
+      var matchJO = buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], PORTS.MATCH);
+      SESSION.setMatch(matchJO);
+      return matchJO;
+    }
 
-    SESSION.setMatch(matchChain);
-    return matchChain;
+    // (2) فشل JO → خليج/شرق أوسط (لكن أوروبا ممنوعة)
+    if (isGulfHint(host, url)) {
+      var matchME = buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], PORTS.MATCH);
+      SESSION.setMatch(matchME);
+      return matchME;
+    }
+
+    return BLOCK;
   }
 
-  // 5) Voice/Game: ثبات عالي (JO_1 أولاً)
+  // ===================== VOICE =====================
   if (t.type === "VOICE") {
-    return buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], t.ports, true);
+    if (isJO) return buildChainWithPorts([PROXIES.JO_1], PORTS.VOICE);
+    if (isGulfHint(host, url)) return buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], PORTS.VOICE);
+    return BLOCK;
   }
 
+  // ===================== GAME =====================
   if (t.type === "GAME") {
-    // إذا IP أردني، خلّيه JO_1 فقط لتقليل jitter
-    if (isJO) return buildChainWithPorts([PROXIES.JO_1], t.ports, true);
-    return buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], t.ports, true);
+    if (isJO) return buildChainWithPorts([PROXIES.JO_1], PORTS.GAME);
+    if (isGulfHint(host, url)) return buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], PORTS.GAME);
+    return BLOCK;
   }
 
-  // 6) PUBG (حتى لو CDN/telemetry): لا DIRECT
+  // ===================== PUBG (حتى CDN/telemetry) =====================
   if (t.pubg) {
-    // لو IP أردني: JO_1 ثابت
-    if (isJO) return buildChainWithPorts([PROXIES.JO_1], PORTS.LOBBY, true);
-
-    // غير أردني/غير معروف: برضه خليه JO (هدفنا matchmaking جو)
-    return buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], PORTS.LOBBY, true);
+    if (isJO) return buildChainWithPorts([PROXIES.JO_1], PORTS.LOBBY);
+    if (isGulfHint(host, url)) return buildChainWithPorts([PROXIES.JO_1, PROXIES.JO_2], PORTS.LOBBY);
+    return BLOCK;
   }
 
-  // 7) باقي الترافيك: DIRECT
-  return "DIRECT";
+  // ===================== NON-PUBG (NO DIRECT) =====================
+  // حسب طلبك: no-direct مطلق — نخليه JO_1
+  return buildChainWithPorts([PROXIES.JO_1], PORTS.GENERAL);
 }
