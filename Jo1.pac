@@ -7,7 +7,7 @@ var LOBBY_PROXY = “PROXY 82.212.84.33:21000”;
 var MATCH_PROXY = “PROXY 82.212.84.33:22000”;
 var UDP_PROXY   = “PROXY 82.212.84.33:40000-41004”;
 var VOICE_PROXY = “PROXY 82.212.84.33:9100”;
-var BACKUP_PROXY = “PROXY 82.212.84.33:23000”; // NEW: Backup for failover
+var BACKUP_PROXY = “PROXY 82.212.84.33:10039”; // NEW: Backup for failover
 var BLOCK = “DIRECT”;
 
 // =====================================================
