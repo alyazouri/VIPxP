@@ -1,19 +1,19 @@
 // =====================================================
-// 🎮 PUBG MOBILE PROXY – JORDAN ZERO-PING v5.0 ULTIMATE
-// Revolutionary AI Routing | Predictive Lock | Nano-Latency
-// All 10 Revolutionary Ideas Fully Implemented
+// 🎮 PUBG MOBILE PROXY – JORDAN ZERO-PING v5.1 FINAL
+// Revolutionary AI Routing | GitHub Excluded | Complete
 // =====================================================
 
 // ==================== PROXY INFRASTRUCTURE ====================
-var MATCH_PRIME    = "PROXY 176.29.153.95:20001";     // 🚀 Primary Match - Ultra Fast
-var MATCH_BACKUP   = "PROXY 82.212.84.33:20001";      // 🔄 Backup Match - Failover
-var LOBBY_FAST     = "PROXY 176.29.153.95:9030";      // ⚡ Fast Lobby
-var LOBBY_STABLE   = "PROXY 212.35.66.45:9030";       // 🛡️ Stable Lobby
-var VOICE_PREMIUM  = "PROXY 82.212.84.33:10012";      // 🎙️ Voice - Low Jitter
-var ANALYTICS_MINI = "PROXY 46.185.131.218:443";      // 📊 Minimal Analytics
-var CDN_COMPRESS   = "PROXY 46.185.131.218:8080";     // 📦 CDN Compressed
-var PRELOAD_PROXY  = "PROXY 176.29.153.95:8080";      // 🔮 Prediction Cache
+var MATCH_PRIME    = "PROXY 176.29.153.95:20001";
+var MATCH_BACKUP   = "PROXY 82.212.84.33:20001";
+var LOBBY_FAST     = "PROXY 176.29.153.95:9030";
+var LOBBY_STABLE   = "PROXY 212.35.66.45:9030";
+var VOICE_PREMIUM  = "PROXY 82.212.84.33:10012";
+var ANALYTICS_MINI = "PROXY 46.185.131.218:443";
+var CDN_COMPRESS   = "PROXY 46.185.131.218:8080";
+var PRELOAD_PROXY  = "PROXY 176.29.153.95:8080";
 var BLOCK          = "PROXY 127.0.0.1:9";
+var DIRECT         = "DIRECT";
 
 // ==================== JORDAN COMPLETE NETWORK MAP ====================
 var JORDAN_CORE = [
@@ -41,40 +41,41 @@ var JORDAN_EXTENDED = [
   ["85.235.0.0","255.255.0.0"]
 ];
 
-// ==================== ADVANCED SESSION STATE (IDEA #9: Auto Cleanup) ====================
+// ==================== EXCLUDED PLATFORMS ====================
+var EXCLUDED_SITES = [
+  "github.com",
+  "githubusercontent.com",
+  "github.io",
+  "githubassets.com",
+  "github.dev"
+];
+
+function isExcludedSite(host){
+  for (var i=0; i<EXCLUDED_SITES.length; i++){
+    if (host.indexOf(EXCLUDED_SITES[i]) !== -1) return true;
+  }
+  return false;
+}
+
+// ==================== ADVANCED SESSION STATE ====================
 var SESSION = {
-  // IDEA #4: Session Hard Lock
   matchIP: null,
   lockUntil: 0,
-  lockStrength: 20000, // 20 seconds hard lock
-  
-  // IDEA #1: Predictive Caching
+  lockStrength: 20000,
   preloadCache: {},
-  preloadTimeout: 10000, // 10 seconds cache
-  
-  // IDEA #2: Priority Queue System
+  preloadTimeout: 10000,
   priorityQueue: [],
   maxPriority: 5,
-  
-  // IDEA #3: Intelligent Blocking
   blockedIPs: {},
-  blockDuration: 60000, // 60 seconds block
-  
-  // IDEA #5: Connection Quality Score
+  blockDuration: 60000,
   connectionQuality: 100,
   qualityThreshold: 50,
-  
-  // IDEA #7: Voice Low-Jitter Route
   voiceIP: null,
   lobbyIP: null,
-  
-  // Additional Tracking
   matchAttempts: 0,
   lastMatchTime: 0,
   avgPingEstimate: 0,
   routeChanges: 0,
-  
-  // Performance Metrics
   successfulConnections: 0,
   failedConnections: 0,
   totalRequests: 0
@@ -236,28 +237,23 @@ function shouldUseBackup(){
 function getMatchProxy(){
   SESSION.totalRequests++;
   
-  // Use backup if quality is low
   if (shouldUseBackup()){
     SESSION.routeChanges++;
     return MATCH_BACKUP + "; " + MATCH_PRIME;
   }
   
-  // Use primary for good quality
   return MATCH_PRIME;
 }
 
 function getLobbyProxy(){
-  // Alternate based on quality and attempts
   if (SESSION.connectionQuality >= 70){
     return LOBBY_FAST;
   }
   
-  // Alternate for stability
   return (SESSION.matchAttempts % 2 === 0) ? LOBBY_FAST : LOBBY_STABLE;
 }
 
 function getVoiceProxy(){
-  // Always use premium for voice
   return VOICE_PREMIUM;
 }
 
@@ -265,7 +261,6 @@ function getVoiceProxy(){
 function cleanupSession(){
   var currentTime = now();
   
-  // Clean old blocks
   var cleanedBlocks = {};
   for (var ip in SESSION.blockedIPs){
     if ((currentTime - SESSION.blockedIPs[ip]) < SESSION.blockDuration){
@@ -274,7 +269,6 @@ function cleanupSession(){
   }
   SESSION.blockedIPs = cleanedBlocks;
   
-  // Clean preload cache
   var cleanedCache = {};
   for (var ip in SESSION.preloadCache){
     if ((currentTime - SESSION.preloadCache[ip]) < SESSION.preloadTimeout){
@@ -283,7 +277,6 @@ function cleanupSession(){
   }
   SESSION.preloadCache = cleanedCache;
   
-  // Trim priority queue if too large
   if (SESSION.priorityQueue.length > SESSION.maxPriority){
     SESSION.priorityQueue = SESSION.priorityQueue.slice(-SESSION.maxPriority);
   }
@@ -293,7 +286,6 @@ function cleanupSession(){
 function resetSession(){
   var timeSinceMatch = now() - SESSION.lastMatchTime;
   
-  // Reset after 2 minutes of inactivity
   if (SESSION.matchIP && timeSinceMatch > 120000){
     SESSION.matchIP = null;
     SESSION.lockUntil = 0;
@@ -301,13 +293,11 @@ function resetSession(){
     SESSION.connectionQuality = 100;
   }
   
-  // Expire match lock
   if (SESSION.matchIP && now() > SESSION.lockUntil + 30000){
     SESSION.matchIP = null;
     SESSION.lockUntil = 0;
   }
   
-  // Run cleanup
   cleanupSession();
 }
 
@@ -335,6 +325,11 @@ function FindProxyForURL(url, host){
   
   resetSession();
   
+  // 🚀 EXCLUDED SITES (GitHub, etc.) → DIRECT
+  if (isExcludedSite(host)){
+    return DIRECT;
+  }
+  
   // ✅ Non-PUBG Traffic → Lobby (Controlled Path)
   if (!isPUBG(host)) return LOBBY_FAST;
 
@@ -342,7 +337,7 @@ function FindProxyForURL(url, host){
   
   if (!isValidIP(ip)) return BLOCK;
   
-  // 🚫 IDEA #3: Intelligent Blocking - Check blocked IPs
+  // 🚫 IDEA #3: Intelligent Blocking
   if (isBlocked(ip)){
     return BLOCK;
   }
@@ -351,7 +346,7 @@ function FindProxyForURL(url, host){
   var isJO_Ext = isJordanExtended(ip);
   var isJO = isJO_Core || isJO_Ext;
 
-  // ==================== KEEP-ALIVE (Minimal Overhead) ====================
+  // ==================== KEEP-ALIVE ====================
   if (isKeepAlive(url, host)){
     return ANALYTICS_MINI;
   }
@@ -365,13 +360,13 @@ function FindProxyForURL(url, host){
     return CDN_COMPRESS;
   }
 
-  // ==================== AUTH (Fast & Secure) ====================
+  // ==================== AUTH ====================
   if (isAuth(url, host)){
     if (isJO) return LOBBY_FAST;
     return LOBBY_STABLE;
   }
 
-  // ==================== FRIENDS/SOCIAL (Optimized) ====================
+  // ==================== FRIENDS/SOCIAL ====================
   if (isFriends(url, host)){
     if (SESSION.lobbyIP && ip === SESSION.lobbyIP) return getLobbyProxy();
     if (isJO){
@@ -381,7 +376,7 @@ function FindProxyForURL(url, host){
     return LOBBY_STABLE;
   }
 
-  // ==================== IDEA #7: VOICE LOW-JITTER ROUTE ====================
+  // ==================== IDEA #7: VOICE LOW-JITTER ====================
   if (isVoice(url, host)){
     if (SESSION.voiceIP && ip === SESSION.voiceIP) return getVoiceProxy();
     
@@ -390,15 +385,13 @@ function FindProxyForURL(url, host){
       return getVoiceProxy();
     }
     
-    // Block non-Jordan voice
     blockIP(ip);
     return BLOCK;
   }
 
-  // ==================== IDEA #1 & #10: PRE-MATCH PREDICTIVE CACHING ====================
+  // ==================== IDEA #1 & #10: PRE-MATCH PREDICTIVE ====================
   if (isPreMatch(url, host)){
     if (isJO_Core){
-      // Cache this IP for fast match connection
       cacheForPreload(ip);
       addToPriority(ip);
       return PRELOAD_PROXY;
@@ -407,12 +400,11 @@ function FindProxyForURL(url, host){
       cacheForPreload(ip);
       return LOBBY_FAST;
     }
-    // Block non-Jordan pre-match
     blockIP(ip);
     return BLOCK;
   }
 
-  // ==================== IDEA #6: LOBBY INTELLIGENT ROUTING ====================
+  // ==================== IDEA #6: LOBBY INTELLIGENT ====================
   if (isLobby(url, host)){
     SESSION.matchAttempts++;
     
@@ -429,7 +421,6 @@ function FindProxyForURL(url, host){
       return LOBBY_STABLE;
     }
     
-    // Allow limited non-Jordan attempts
     if (SESSION.matchAttempts < 3) return LOBBY_STABLE;
     
     blockIP(ip);
@@ -439,7 +430,7 @@ function FindProxyForURL(url, host){
   // 🎯 ==================== MATCH (ALL IDEAS COMBINED) ====================
   if (isMatch(url, host)){
     
-    // ✅ IDEA #4: Session Hard Lock - Active session protection
+    // ✅ IDEA #4: Session Hard Lock
     if (isSessionLocked()){
       if (ip === SESSION.matchIP){
         SESSION.lastMatchTime = now();
@@ -447,38 +438,37 @@ function FindProxyForURL(url, host){
         return getMatchProxy();
       }
       
-      // IDEA #3: Block hijack attempts
       blockIP(ip);
       updateQuality(false);
       return BLOCK;
     }
 
-    // 🚀 IDEA #2: Priority Queue - Preloaded IPs get instant access
+    // 🚀 IDEA #2: Priority Queue
     var priorityScore = getPriorityScore(ip);
     if (priorityScore > 0 && isJO_Core){
       lockMatchSession(ip);
       return getMatchProxy();
     }
 
-    // 🔮 IDEA #1: Predictive Cache - Use cached IPs
+    // 🔮 IDEA #1: Predictive Cache
     if (isPreloaded(ip) && isJO_Core){
       lockMatchSession(ip);
       return getMatchProxy();
     }
 
-    // 🎯 Jordan Core Only (Strictest Filter)
+    // 🎯 Jordan Core Only
     if (isJO_Core){
       lockMatchSession(ip);
       return getMatchProxy();
     }
 
-    // 🚫 IDEA #3: Block non-core immediately
+    // 🚫 IDEA #3: Block non-core
     blockIP(ip);
     updateQuality(false);
     return BLOCK;
   }
 
-  // ==================== DEFAULT FALLBACK (IDEA #6) ====================
+  // ==================== DEFAULT FALLBACK ====================
   if (isJO) return LOBBY_FAST;
   
   return LOBBY_STABLE;
