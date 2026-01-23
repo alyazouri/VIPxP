@@ -1,7 +1,5 @@
-// dns 1.1.1.1 1.0.0.1
 // ================= PROXIES =================
-
-var MATCH_JO = "PROXY 46.185.131.218:20001"; // Strong UDP Match
+var MATCH_JO = "PROXY 46.185.131.218:20001";
 
 var LOBBY_POOL = [
   "PROXY 212.35.66.45:8085",
@@ -12,7 +10,7 @@ var LOBBY_POOL = [
 var BLOCK  = "PROXY 127.0.0.1:9";
 var DIRECT = "DIRECT";
 
-// ================= STRONG JORDAN IPV4 (MATCH) =================
+// ================= JORDAN MATCH (STRONG) =================
 var JORDAN_MATCH_IPV4 = [
   ["82.212.64.0","255.255.192.0"],
   ["94.249.0.0","255.255.128.0"],
@@ -22,7 +20,7 @@ var JORDAN_MATCH_IPV4 = [
   ["213.6.0.0","255.255.0.0"]
 ];
 
-// ================= WIDE JORDAN IPV4 (LOBBY) =================
+// ================= JORDAN WIDE (LOBBY) =================
 var JORDAN_WIDE_IPV4 = [
   ["82.212.0.0","255.255.0.0"],
   ["94.249.0.0","255.255.0.0"],
@@ -36,6 +34,34 @@ var JORDAN_WIDE_IPV4 = [
   ["46.185.0.0","255.255.0.0"],
   ["185.107.0.0","255.255.0.0"],
   ["195.229.0.0","255.254.0.0"]
+];
+
+// ================= BLACKLIST: EU + RUSSIA + ASIA =================
+var GEO_BLACKLIST = [
+
+  // Europe (wide)
+  ["5.0.0.0","255.0.0.0"],
+  ["37.0.0.0","255.0.0.0"],
+  ["51.0.0.0","255.0.0.0"],
+
+  // Russia
+  ["5.136.0.0","255.248.0.0"],
+  ["31.128.0.0","255.192.0.0"],
+  ["46.16.0.0","255.240.0.0"],
+  ["95.24.0.0","255.248.0.0"],
+  ["178.64.0.0","255.192.0.0"],
+
+  // Asia (far & wide)
+  ["1.0.0.0","255.0.0.0"],
+  ["14.0.0.0","255.0.0.0"],
+  ["27.0.0.0","255.0.0.0"],
+  ["36.0.0.0","255.0.0.0"],
+  ["39.0.0.0","255.0.0.0"],
+  ["42.0.0.0","255.0.0.0"],
+  ["49.0.0.0","255.0.0.0"],
+  ["58.0.0.0","255.0.0.0"],
+  ["59.0.0.0","255.0.0.0"],
+  ["60.0.0.0","255.0.0.0"]
 ];
 
 // ================= SESSION =================
@@ -61,11 +87,10 @@ function resolvePinned(host){
   return ip;
 }
 
-// اختيار بروكسي لوبي ثابت حسب الـ host
 function pickLobbyProxy(host){
-  var h = 0;
+  var h=0;
   for (var i=0;i<host.length;i++)
-    h = (h + host.charCodeAt(i)) % LOBBY_POOL.length;
+    h=(h+host.charCodeAt(i))%LOBBY_POOL.length;
   return LOBBY_POOL[h];
 }
 
@@ -95,26 +120,26 @@ function FindProxyForURL(url, host) {
   var ip = resolvePinned(host);
   if (!ip || ip.indexOf(":")>-1) return BLOCK;
 
-  // ========= MATCH =========
-  if (isMatch(url, host)) {
+  // HARD GEO BLOCK
+  if (isInList(ip, GEO_BLACKLIST)) return BLOCK;
 
+  // MATCH (STRONG ONLY)
+  if (isMatch(url, host)) {
     if (!isInList(ip, JORDAN_MATCH_IPV4)) return BLOCK;
 
     var net24 = ip.split('.').slice(0,3).join('.');
-
     if (!SESSION.matchNet) {
-      SESSION.matchNet  = net24;
+      SESSION.matchNet = net24;
       SESSION.matchHost = host;
       return MATCH_JO;
     }
-
     if (host !== SESSION.matchHost) return BLOCK;
     if (net24 !== SESSION.matchNet) return BLOCK;
 
     return MATCH_JO;
   }
 
-  // ========= LOBBY / SOCIAL / CDN =========
+  // LOBBY / SOCIAL / CDN
   if (isLobby(url, host) || isSocial(url, host) || isCDN(url, host)) {
     if (!isInList(ip, JORDAN_WIDE_IPV4)) return BLOCK;
     return pickLobbyProxy(host);
