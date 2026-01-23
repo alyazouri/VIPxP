@@ -16,7 +16,7 @@ var DEBUG = true;
 
 // ================= PROXIES =================
 var MATCH_JO = "PROXY 176.29.153.95:20001";   // Match Jordan Core
-var LOBBY_JO = "PROXY 176.29.153.95:9030";    // Lobby / Social Jordan
+var LOBBY_JO = "PROXY 176.29.153.95:9030; PROXY 212.35.66.45:9030; PROXY 91.106.109.12:9030; PROXY 82.212.84.33:9030";    // Lobby / Social Jordan
 var BLOCK    = "PROXY 127.0.0.1:9";
 var DIRECT   = "DIRECT";
 
