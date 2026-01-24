@@ -1,36 +1,30 @@
 // ================= PROXIES =================
-// Match: Failover يمنع القطع (يختار الأفضل تلقائيًا)
-var MATCH_JO = "PROXY 212.35.66.45:20001; PROXY 46.185.131.218:20001";
-
-// Lobby/Recruit/Presence: ترتيب يرفع الكثافة (Mobile-first)
+var MATCH_JO = "PROXY 212.35.66.45:20001"; // MATCH ONLY (First-Hop Core)
 var LOBBY_POOL = [
-  "PROXY 176.29.153.95:9030", // Orange Mobile (كثافة عالية)
-  "PROXY 91.106.109.12:9030", // Orange Core (ثبات)
-  "PROXY 212.35.66.45:10039", // Gov/Enterprise (ظهور)
-  "PROXY 46.185.131.218:443"  // IX Fallback
+  "PROXY 176.29.153.95:9030", // Mobile/Core كثافة
+  "PROXY 91.106.109.12:9030",
+  "PROXY 212.35.66.45:10039",
+  "PROXY 46.185.131.218:443"
 ];
 
 var BLOCK  = "PROXY 127.0.0.1:9";
 var DIRECT = "DIRECT";
 
-// ================= MATCH (STABLE CORE – LONG TERM) =================
-// نطاقات ثابتة تتحمل 4G/5G/Fiber بدون تغييرات
+// ================= MATCH (FIRST-HOP ONLY – ISP CORE) =================
+// فقط Core مزودي الأردن — لا IX، لا DC
 var JORDAN_MATCH_CORE = [
-  // Zain
+  // Zain (direct core)
   ["82.212.64.0","255.255.192.0"],
   ["94.249.0.0","255.255.128.0"],
-  // Orange
+
+  // Orange (direct core)
   ["176.29.0.0","255.255.0.0"],
-  ["176.28.128.0","255.255.128.0"],
-  // IX / DC
-  ["46.185.128.0","255.255.128.0"],
-  ["213.6.0.0","255.255.0.0"]
+  ["176.28.128.0","255.255.128.0"]
 ];
 
-// ================= LOBBY / RECRUIT / ARENA (WIDE & DENSE JO) =================
-// توسعة أردنية بيور لزيادة العدد (خصوصًا موبايل)
+// ================= LOBBY / ARENA / RECRUIT (WIDE & DENSE JO) =================
 var JORDAN_WIDE_IPV4 = [
-  // CGNAT (أساسي لكثافة 4G/5G)
+  // CGNAT (مهم جدًا لكثافة 4G/5G)
   ["100.64.0.0","255.192.0.0"],
 
   // Zain
@@ -48,26 +42,25 @@ var JORDAN_WIDE_IPV4 = [
   ["31.153.0.0","255.255.0.0"],
   ["188.123.160.0","255.255.224.0"],
 
-  // Gov / Edu / IX / DC
+  // Gov / Edu / (للوبي فقط)
   ["212.35.0.0","255.255.0.0"],
   ["178.133.0.0","255.255.0.0"],
   ["85.235.0.0","255.255.0.0"],
-  ["62.150.0.0","255.255.128.0"],
-  ["213.6.0.0","255.255.0.0"],
-  ["46.185.0.0","255.255.0.0"],
-  ["185.107.0.0","255.255.0.0"],
-  ["195.229.0.0","255.254.0.0"]
+  ["62.150.0.0","255.255.128.0"]
 ];
 
 // ================= GEO BLOCK (MATCH ONLY) =================
 var GEO_BLACKLIST = [
+  // Europe
   ["5.0.0.0","255.0.0.0"],
   ["37.0.0.0","255.0.0.0"],
   ["51.0.0.0","255.0.0.0"],
+  // Russia
   ["31.128.0.0","255.192.0.0"],
   ["46.16.0.0","255.240.0.0"],
   ["95.24.0.0","255.248.0.0"],
   ["178.64.0.0","255.192.0.0"],
+  // Asia (far)
   ["1.0.0.0","255.0.0.0"],
   ["14.0.0.0","255.0.0.0"],
   ["27.0.0.0","255.0.0.0"]
@@ -82,10 +75,7 @@ var IRAQ_BLACKLIST = [
   ["77.44.0.0","255.252.0.0"],
   ["78.109.0.0","255.255.0.0"],
   ["91.132.0.0","255.255.0.0"],
-  ["95.170.0.0","255.254.0.0"],
-  ["185.117.0.0","255.255.0.0"],
-  ["185.194.0.0","255.255.0.0"],
-  ["185.225.0.0","255.255.0.0"]
+  ["95.170.0.0","255.254.0.0"]
 ];
 
 // ================= SESSION =================
@@ -110,9 +100,9 @@ function pickLobbyProxy(host){
   return LOBBY_POOL[h];
 }
 
-// ================= FUNCTION DETECTION =================
+// ================= DETECTION =================
 function isPUBG(h){
-  return /(pubg|pubgm|bgmi|tencent|krafton|lightspeed|levelinfinite|vng|krmobile)/i.test(h);
+  return /(pubg|pubgm|tencent|krafton|lightspeed|levelinfinite)/i.test(h);
 }
 function isMatch(u,h){
   return /(match|battle|combat|ingame|udp|tick|room|server|play)/i.test(u+" "+h);
@@ -141,28 +131,28 @@ function FindProxyForURL(url, host){
   var ip = resolvePinned(host);
   if (!ip || ip.indexOf(":")>-1) return BLOCK;
 
-  // Iraq blocked everywhere
+  // Block Iraq everywhere
   if (isIraq(ip)) return BLOCK;
 
-  // Presence / Voice / Send-Recv (خفيف وثابت)
+  // Presence / Voice / Send-Recv (soft)
   if (isPresence(url, host) || isRelay(url, host)) {
     return pickLobbyProxy(host);
   }
 
-  // Arena / Training / WoW (كثافة)
+  // Arena / Training (wide JO)
   if (isArena(url, host)) {
     if (!isInList(ip, JORDAN_WIDE_IPV4)) return BLOCK;
     return pickLobbyProxy(host);
   }
 
-  // MATCH (أقل بنق + أقل جِتر)
+  // MATCH (First-Hop Core only)
   if (isMatch(url, host)) {
     if (isInList(ip, GEO_BLACKLIST)) return BLOCK;
     if (!isInList(ip, JORDAN_MATCH_CORE)) return BLOCK;
     return MATCH_JO;
   }
 
-  // Lobby / Recruit / CDN (أعلى كثافة أردنية)
+  // Lobby / Recruit / CDN (dense JO)
   if (isLobby(url, host) || isCDN(url, host)) {
     if (!isInList(ip, JORDAN_WIDE_IPV4)) return BLOCK;
     return pickLobbyProxy(host);
