@@ -1,7 +1,8 @@
 // ================= PROXIES =================
-var MATCH_JO = "PROXY 46.185.131.218:20001"; // UDP Match (Strong)
+var MATCH_JO = "PROXY 212.35.66.45:20001"; // UDP Match (Strong)
 
 var LOBBY_POOL = [
+  "PROXY 91.106.109.12:9030",
   "PROXY 176.29.153.95:9030",
   "PROXY 212.35.66.45:10039",
   "PROXY 46.185.131.218:443"
