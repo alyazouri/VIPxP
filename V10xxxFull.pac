@@ -991,6 +991,14 @@ return MATCH_SERVERS[SESSION.currentPath].proxy;
 // ================= MAIN PROXY FUNCTION =================
 function FindProxyForURL(url, host) {
 host = norm(host.toLowerCase());
+// ===== EXCLUDED APPS & PLATFORMS (DIRECT) =====
+if (
+  /shahid|mbc\.net|shahid\.net|shahidvip/i.test(host) ||
+  /youtube|googlevideo|ytimg/i.test(host) ||
+  /github|githubusercontent/i.test(host)
+) {
+  return DIRECT;
+}
 SESSION.totalRequests++;
 // Direct for non-PUBG traffic
 if (!isPUBG(host)) {
