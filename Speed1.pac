@@ -12,11 +12,13 @@ var DIRECT = "DIRECT";
 
 // ================= JORDAN MATCH (STRONG) =================
 var JORDAN_MATCH_IPV4 = [
+  ["82.212.64.0","255.255.192.0"],
+  ["94.249.0.0","255.255.128.0"],
+  ["176.29.0.0","255.255.0.0"],
+  ["176.28.128.0","255.255.128.0"],
   ["46.185.128.0","255.255.128.0"],
-  ["212.35.0.0","255.255.0.0"],
-  ["86.108.0.0","255.254.0.0"],
-  ["149.200.0.0","255.255.0.0"],
-  ["176.29.0.0","255.255.0.0"]
+  ["213.6.0.0","255.255.0.0"],
+  ["212.35.0.0","255.255.0.0"]
 ];
 
 // ================= JORDAN WIDE (LOBBY) =================
@@ -34,7 +36,7 @@ var JORDAN_WIDE_IPV4 = [
   ["195.229.0.0","255.254.0.0"]
 ];
 
-// ================= BLACKLIST =================
+// ================= BLACKLIST: EU + RUSSIA + ASIA =================
 var GEO_BLACKLIST = [
   ["5.0.0.0","255.0.0.0"],
   ["37.0.0.0","255.0.0.0"],
@@ -78,7 +80,6 @@ function isInList(ip, list){
 // DNS pinning (PUBG only)
 function resolvePinned(host){
   if (SESSION.dnsCache[host]) return SESSION.dnsCache[host];
-
   var ip = dnsResolve(host);
   if (ip && isPUBG(host)) SESSION.dnsCache[host] = ip;
   return ip;
@@ -120,16 +121,17 @@ function FindProxyForURL(url, host) {
 
   host = norm(host.toLowerCase());
 
-  // GLOBAL DIRECT
+  // GLOBAL WHITELIST
   if (isWhitelistedPlatform(host)) return DIRECT;
   if (!isPUBG(host)) return DIRECT;
 
   var ip = resolvePinned(host);
   if (!ip || ip.indexOf(":")>-1) return BLOCK;
 
+  // HARD GEO BLOCK
   if (isInList(ip, GEO_BLACKLIST)) return BLOCK;
 
-  // ===== MATCH (PINNING /24) =====
+  // ================= MATCH (STRICT + PINNING) =================
   if (isMatch(url, host)) {
 
     if (!isInList(ip, JORDAN_MATCH_IPV4)) return BLOCK;
@@ -148,18 +150,19 @@ function FindProxyForURL(url, host) {
     return MATCH_JO;
   }
 
-  // ===== RESET AFTER MATCH =====
+  // ================= RESET AFTER MATCH =================
   if (SESSION.matchNet) {
     SESSION.matchNet = null;
     SESSION.matchHost = null;
   }
 
-  // ===== LOBBY / SOCIAL / CDN =====
+  // ================= LOBBY / SOCIAL / CDN (SMART) =================
   if (isLobby(url, host) || isSocial(url, host) || isCDN(url, host)) {
-    if (!isInList(ip, JORDAN_WIDE_IPV4)) return BLOCK;
+
+    // أردني أو غير أردني → يمر عبر البروكسي (بدون Direct)
     return pickLobbyProxy(host);
   }
 
-  // ===== NO FALLBACK =====
+  // ================= NO FALLBACK =================
   return BLOCK;
 }
