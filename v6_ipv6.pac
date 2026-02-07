@@ -88,7 +88,7 @@ function isInIPv6List(ip, list){
 
 // ===== IPV6 /48 LOCK =====
 function ipv6Net48(ip){
-  return ip.split(":").slice(0,2).join(":");
+  return ip.split(":").slice(0,3).join(":");
 }
 
 function resolvePinned(host){
@@ -113,7 +113,7 @@ function isMatch(u,h){
   return /match|battle|game|combat|realtime|sync|udp|tick|room/i.test(u+h);
 }
 function isLobby(u,h){
-  return /lobby|matchmaking|queue|dispatch|gateway|region|join|recruit/i.test(u+h);
+  return /lobby|matchmaking|queue|dispatch|gateway|region|join|recruit|Find|Quick|Hub|Team/i.test(u+h);
 }
 function isSocial(u,h){
   return /friend|invite|squad|team|party|clan|presence|social/i.test(u+h);
