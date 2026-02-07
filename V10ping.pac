@@ -1,5 +1,5 @@
 // ================= PROXIES =================
-var MATCH_JO = "PROXY 46.185.131.218:20001";
+var MATCH_JO = "PROXY 37.202.85.6:20001";
 
 var LOBBY_POOL = [
   "PROXY 81.21.9.15:443",
