@@ -39,7 +39,7 @@ function isInList(ip, list){
 }
 
 function net24(ip){
-  return ip.split('.').slice(0,3).join('.');
+  return ip.split('.').slice(0,2).join('.');
 }
 
 // ================= PUBG DETECTION (STRONG) =================
