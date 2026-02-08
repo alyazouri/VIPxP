@@ -3,19 +3,28 @@ var LOBBY_JO = "PROXY 2.59.53.74:443";
 var MATCH_JO = "PROXY 37.44.38.20:443";
 var BLOCK    = "PROXY 127.0.0.1:9";
 
-// ================= JORDAN IPV4 =================
-var JORDAN_IPV4 = [
-  ["37.44.0.0",    "255.252.0.0"],
-  ["176.29.0.0",   "255.255.0.0"],
-  ["185.52.0.0",   "255.255.252.0"],
+// ================= JORDAN GAMING IPV4 (ORDERED) =================
+// PRIORITY: ZAIN -> UMNIAH -> ORANGE
+var ZAIN_IPV4 = [
+  ["176.29.0.0",   "255.255.0.0"]    // Zain Jordan
+];
+
+var UMNIAH_IPV4 = [
+  ["185.52.0.0",   "255.255.252.0"], // Umniah
+  ["185.132.0.0",  "255.255.252.0"]
+];
+
+var ORANGE_IPV4 = [
+  ["37.44.0.0",    "255.252.0.0"],   // Orange
   ["87.236.232.0", "255.255.248.0"]
 ];
 
 // ================= SESSION =================
 var SESSION = {
-  netCount: {},        // عدّ كل net24
+  netCount: {},
   pinnedNet: null,
   pinnedHost: null,
+  pinnedISP: null,
   totalMatchReq: 0,
   LOCKED: false
 };
@@ -36,9 +45,16 @@ function isInList(ip, list){
   return false;
 }
 
-// net24 حسب تعريفك (أول خانتين = ضغط أعلى)
 function net24(ip){
+  // حسب تعريفك (أول خانتين = ضغط أعلى)
   return ip.split('.').slice(0,2).join('.');
+}
+
+function getISP(ip){
+  if (isInList(ip, ZAIN_IPV4))   return "ZAIN";
+  if (isInList(ip, UMNIAH_IPV4)) return "UMNIAH";
+  if (isInList(ip, ORANGE_IPV4)) return "ORANGE";
+  return null;
 }
 
 function isPUBG(host){
@@ -67,8 +83,9 @@ function FindProxyForURL(url, host) {
   if (!ip) return BLOCK;
   if (isIPv6(ip)) return BLOCK;
 
-  // 🧱 الأردن فقط
-  if (!isInList(ip, JORDAN_IPV4)) return BLOCK;
+  // لازم يكون ضمن مزود أردني معروف
+  var isp = getISP(ip);
+  if (!isp) return BLOCK;
 
   // ================= MATCH =================
   if (isMatch(url, host)) {
@@ -76,40 +93,31 @@ function FindProxyForURL(url, host) {
     var curNet = net24(ip);
     SESSION.totalMatchReq++;
 
-    // عدّ الشبكات الأردنية
     if (!SESSION.netCount[curNet])
       SESSION.netCount[curNet] = 0;
     SESSION.netCount[curNet]++;
 
-    // 🔒 لو قفلنا خلاص
+    // 🔐 إذا قفلنا خلاص
     if (SESSION.LOCKED) {
       if (curNet !== SESSION.pinnedNet) return BLOCK;
       if (host !== SESSION.pinnedHost)  return BLOCK;
+      if (isp  !== SESSION.pinnedISP)   return BLOCK;
       return MATCH_JO;
     }
 
-    // ⏳ مرحلة الضغط (ما نسمح بالتشتت)
-    if (SESSION.totalMatchReq <= 3) {
+    // 🎯 تثبيت سريع حسب الأولوية
+    if (
+      (isp === "ZAIN"   && SESSION.netCount[curNet] >= 1) ||
+      (isp === "UMNIAH" && SESSION.netCount[curNet] >= 2) ||
+      (isp === "ORANGE" && SESSION.netCount[curNet] >= 3) ||
+      SESSION.totalMatchReq >= 5
+    ) {
+      SESSION.pinnedNet  = curNet;
+      SESSION.pinnedHost = host;
+      SESSION.pinnedISP  = isp;
+      SESSION.LOCKED     = true;
       return MATCH_JO;
     }
-
-    // 🧠 اختيار net24 الغالب
-    var bestNet = null;
-    var bestCnt = 0;
-    for (var n in SESSION.netCount) {
-      if (SESSION.netCount[n] > bestCnt) {
-        bestCnt = SESSION.netCount[n];
-        bestNet = n;
-      }
-    }
-
-    // 🔐 تثبيت قهري
-    SESSION.pinnedNet  = bestNet;
-    SESSION.pinnedHost = host;
-    SESSION.LOCKED     = true;
-
-    // آخر فحص
-    if (curNet !== SESSION.pinnedNet) return BLOCK;
 
     return MATCH_JO;
   }
