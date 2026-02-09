@@ -1,5 +1,5 @@
 // ================= PROXIES =================
-var LOBBY_JO = "PROXY 2.59.53.74:443";    // Lobby services
+var LOBBY_JO = "PROXY 46.23.112.5:1080";    // Lobby services
 var MATCH_JO = "PROXY 37.44.38.20:443";  // Match + Join + Matchmaking
 var BLOCK    = "PROXY 127.0.0.1:9";
 
