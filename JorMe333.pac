@@ -209,11 +209,11 @@ function isPrivateOrLocalIP(ip){
 }
 
 // REAL IPv4 only: if IPv6/NULL => null
-function getRealIPv4(host){
-  var ip = dnsResolve(host);
-  if (isIPv4(ip)) return ip;
-  return null;
-}
+//function getRealIPv4(host){
+ // var ip = dnsResolve(host);
+//  if (isIPv4(ip)) return ip;
+ // return null;
+//}
 
 // =======================
 // GEO CHECKS — COMPLETE
