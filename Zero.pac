@@ -1,633 +1,334 @@
 var PROXY = {
+  // ===================================
+  // 🎮 MATCH ZONE - اللعب الفعلي
+  // ===================================
   MATCH_JO_1   : "PROXY 176.29.153.95:20001",
   MATCH_JO_2   : "PROXY 176.29.153.95:20002",
   MATCH_JO_3   : "PROXY 176.29.153.95:20003",
-  LOBBY_MAIN   : "PROXY 212.35.66.45:9030",
-  BLACKHOLE    : "PROXY 127.0.0.1:1"
+  
+  // ===================================
+  // 🏠 LOBBY ZONE - التصفح
+  // ===================================
+  LOBBY_MAIN   : "PROXY 212.35.66.45:9030"
 };
 
 /* ========================================
-   🧬 GENETIC ALGORITHM - IP CLASSIFICATION
-   تصنيف ذكي بناءً على DNA الشبكة
+   🚫 TOTAL EUROPE BLACKLIST
+   أي نطاق فيه حتى HOP واحد أوروبي
    ======================================== */
-function getNetworkDNA(host){
-  var octets = host.split(".");
-  if (octets.length !== 4) return null;
-  
-  var dna = {
-    first: parseInt(octets[0]),
-    second: parseInt(octets[1]),
-    third: parseInt(octets[2]),
-    class: "",
-    region: "",
-    confidence: 0
-  };
-  
-  // تحديد Class الشبكة
-  if (dna.first >= 1 && dna.first <= 126) dna.class = "A";
-  else if (dna.first >= 128 && dna.first <= 191) dna.class = "B";
-  else if (dna.first >= 192 && dna.first <= 223) dna.class = "C";
-  
-  return dna;
-}
-
-/* ========================================
-   🎯 ADVANCED JORDAN DETECTION
-   كشف متعدد الطبقات للمسارات الأردنية
-   ======================================== */
-function isJordanTier1(host){
-  var dna = getNetworkDNA(host);
-  if (!dna) return false;
-  
-  // Layer 1: Exact ISP ranges
+function hasEuropeHop(host){
   return (
-    // Orange Jordan - Expanded
-    (dna.first === 46 && dna.second >= 32 && dna.second <= 39) ||
-    (dna.first === 37 && dna.second === 17) ||
-    (dna.first === 31 && dna.second >= 44 && dna.second <= 47) ||
-    (dna.first === 94 && dna.second === 249) ||
-    (dna.first === 188 && dna.second === 161) ||
-    (dna.first === 78 && dna.second === 135) ||
-    (dna.first === 91 && dna.second >= 144 && dna.second <= 151) ||
-    (dna.first === 176 && dna.second >= 10 && dna.second <= 11) ||
-    (dna.first === 185 && dna.second >= 88 && dna.second <= 91) ||
-    
-    // Zain Jordan - Expanded
-    (dna.first === 89 && dna.second >= 28 && dna.second <= 35) ||
-    (dna.first === 45 && dna.second >= 128 && dna.second <= 131) ||
-    (dna.first === 185 && dna.second === 5 && dna.third >= 156 && dna.third <= 159) ||
-    (dna.first === 185 && dna.second === 117 && dna.third >= 8 && dna.third <= 15) ||
-    (dna.first === 37 && dna.second >= 44 && dna.second <= 47) ||
-    
-    // Umniah - Expanded
-    (dna.first === 102 && dna.second >= 64 && dna.second <= 127) ||
-    (dna.first === 185 && dna.second === 127 && dna.third >= 76 && dna.third <= 79) ||
-    (dna.first === 37 && dna.second >= 48 && dna.second <= 51) ||
-    (dna.first === 185 && dna.second === 20 && dna.third >= 224 && dna.third <= 255) ||
-    
-    // Batelco Jordan
-    (dna.first === 46 && dna.second >= 244 && dna.second <= 247) ||
-    
-    // Jordan Gov/University
-    (dna.first === 196 && dna.second >= 204 && dna.second <= 207) ||
-    (dna.first === 212 && dna.second >= 100 && dna.second <= 101) ||
-    (dna.first === 193 && dna.second >= 188 && dna.second <= 191)
+    // 🇩🇪 Germany (كل النطاقات)
+    isInNet(host, "2.0.0.0",     "254.0.0.0") ||
+    isInNet(host, "5.0.0.0",     "255.0.0.0") ||    // إلا إذا UAE
+    isInNet(host, "31.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "46.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "77.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "78.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "80.0.0.0",    "248.0.0.0") ||
+    isInNet(host, "81.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "82.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "83.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "84.0.0.0",    "252.0.0.0") ||
+    isInNet(host, "85.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "86.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "87.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "88.0.0.0",    "248.0.0.0") ||
+    isInNet(host, "89.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "90.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "91.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "92.0.0.0",    "252.0.0.0") ||
+    isInNet(host, "93.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "94.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "95.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "109.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "128.0.0.0",   "192.0.0.0") ||
+    isInNet(host, "134.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "141.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "145.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "151.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "176.0.0.0",   "240.0.0.0") ||
+    isInNet(host, "185.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "188.0.0.0",   "252.0.0.0") ||
+    isInNet(host, "193.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "194.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "195.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "212.0.0.0",   "252.0.0.0") ||
+    isInNet(host, "213.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "217.0.0.0",   "255.0.0.0")
   );
 }
 
 /* ========================================
-   🌐 CDN INTELLIGENCE
-   تحليل ذكي لـ CDN مع تتبع GEO
+   🇯🇴 JORDAN ABSOLUTE PATHS
+   كل نطاق مضمون 100% أردني
    ======================================== */
-function analyzeCDN(host){
-  var dna = getNetworkDNA(host);
-  if (!dna) return {provider: "unknown", hasJordanPOP: false, score: 0};
-  
-  var result = {
-    provider: "unknown",
-    hasJordanPOP: false,
-    score: 0
-  };
-  
-  // Cloudflare detection
-  if ((dna.first === 104 && dna.second >= 16 && dna.second <= 31) ||
-      (dna.first === 172 && dna.second >= 64 && dna.second <= 95) ||
-      (dna.first === 188 && dna.second === 114 && dna.third >= 96 && dna.third <= 127)) {
-    result.provider = "cloudflare";
-    result.hasJordanPOP = true;
-    result.score = 95;
-  }
-  
-  // Google Global Cache
-  else if ((dna.first === 142 && dna.second >= 250 && dna.second <= 251) ||
-           (dna.first === 172 && dna.second === 217) ||
-           (dna.first === 216 && dna.second === 239 && dna.third >= 32 && dna.third <= 63)) {
-    result.provider = "google";
-    result.hasJordanPOP = true;
-    result.score = 90;
-  }
-  
-  // Akamai
-  else if ((dna.first === 23 && dna.second >= 32 && dna.second <= 95) ||
-           (dna.first === 104 && dna.second >= 64 && dna.second <= 127)) {
-    result.provider = "akamai";
-    result.hasJordanPOP = true;
-    result.score = 85;
-  }
-  
-  // Meta (Facebook/Instagram)
-  else if ((dna.first === 157 && dna.second === 240) ||
-           (dna.first === 31 && dna.second === 13 && dna.third >= 64 && dna.third <= 127)) {
-    result.provider = "meta";
-    result.hasJordanPOP = true;
-    result.score = 80;
-  }
-  
-  // Fastly
-  else if ((dna.first === 151 && dna.second === 101) ||
-           (dna.first === 199 && dna.second === 232)) {
-    result.provider = "fastly";
-    result.hasJordanPOP = false;
-    result.score = 60;
-  }
-  
-  return result;
-}
-
-/* ========================================
-   🌍 GULF COALITION
-   تحالف خليجي موسع
-   ======================================== */
-function isGulfCoalition(host){
-  var dna = getNetworkDNA(host);
-  if (!dna) return false;
-  
+function isJordanAbsolute(host){
   return (
-    // UAE Tier 1
-    (dna.first === 5 && dna.second >= 1 && dna.second <= 127) ||
-    (dna.first === 213 && dna.second >= 42 && dna.second <= 43) ||
-    (dna.first === 31 && dna.second >= 222 && dna.second <= 223) ||
-    (dna.first === 85 && dna.second === 15) ||
-    (dna.first === 217 && dna.second === 18) ||
-    
-    // Saudi Tier 1
-    (dna.first === 85 && dna.second === 25) ||
-    (dna.first === 188 && dna.second === 245) ||
-    (dna.first === 213 && dna.second >= 130 && dna.second <= 131) ||
-    (dna.first === 91 && dna.second >= 102 && dna.second <= 103) ||
-    
-    // Kuwait
-    (dna.first === 87 && dna.second >= 236 && dna.second <= 237) ||
-    (dna.first === 195 && dna.second === 229) ||
-    (dna.first === 62 && dna.second === 215) ||
-    
-    // Bahrain
-    (dna.first === 37 && dna.second === 223) ||
-    (dna.first === 82 && dna.second === 178) ||
-    (dna.first === 195 && dna.second === 229) ||
-    
-    // Qatar
-    (dna.first === 37 && dna.second >= 210 && dna.second <= 211) ||
-    (dna.first === 78 && dna.second >= 100 && dna.second <= 101) ||
-    (dna.first === 185 && dna.second === 60) ||
-    
-    // Oman
-    (dna.first === 5 && dna.second >= 36 && dna.second <= 37) ||
-    (dna.first === 46 && dna.second === 49) ||
-    
-    // Egypt (geographic proximity)
-    (dna.first === 41 && dna.second >= 128 && dna.second <= 191) ||
-    (dna.first === 156 && dna.second >= 160 && dna.second <= 191) ||
-    (dna.first === 197 && dna.second >= 32 && dna.second <= 63)
+    // 🟢 Orange Jordan - Core ASN
+    isInNet(host, "46.32.0.0",   "255.248.0.0") ||
+    isInNet(host, "37.17.0.0",   "255.255.0.0") ||
+    isInNet(host, "31.44.0.0",   "255.252.0.0") ||
+    isInNet(host, "94.249.0.0",  "255.255.0.0") ||
+    isInNet(host, "188.161.0.0", "255.255.0.0") ||
+    isInNet(host, "78.135.0.0",  "255.255.0.0") ||
+    isInNet(host, "91.144.0.0",  "255.248.0.0") ||
+    isInNet(host, "176.10.0.0",  "255.254.0.0") ||
+    isInNet(host, "185.88.0.0",  "255.252.0.0") ||
+
+    // 🟡 Zain Jordan - Core ASN
+    isInNet(host, "89.28.0.0",   "255.248.0.0") ||
+    isInNet(host, "45.128.0.0",  "255.252.0.0") ||
+    isInNet(host, "185.5.156.0", "255.255.252.0") ||
+    isInNet(host, "185.117.8.0", "255.255.248.0") ||
+    isInNet(host, "37.44.0.0",   "255.252.0.0") ||
+
+    // 🟣 Umniah - Core ASN
+    isInNet(host, "102.64.0.0",  "255.192.0.0") ||
+    isInNet(host, "185.127.76.0","255.255.252.0") ||
+    isInNet(host, "37.48.0.0",   "255.252.0.0") ||
+    isInNet(host, "185.20.224.0","255.255.224.0") ||
+
+    // 🔵 Batelco Jordan
+    isInNet(host, "46.244.0.0",  "255.252.0.0") ||
+
+    // 🏛️ Jordan Gov / Universities
+    isInNet(host, "196.204.0.0", "255.252.0.0") ||
+    isInNet(host, "212.100.0.0", "255.254.0.0") ||
+    isInNet(host, "193.188.0.0", "255.252.0.0")
   );
 }
 
 /* ========================================
-   🚫 EUROPEAN DEATH ZONE
-   منطقة الموت الأوروبية - رفض شامل
+   🌐 CDN with Jordan POP (مضمون)
+   فقط الـ ranges اللي فيها POP عمّان
    ======================================== */
-function isEuropeanDeathZone(host){
-  var dna = getNetworkDNA(host);
-  if (!dna) return false;
-  
-  // Aggressive European blocking
-  var europeanFirstOctets = [
-    2, 31, 37, 46, 62, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
-    90, 91, 92, 93, 94, 95, 109, 128, 130, 134, 141, 145, 151, 176, 178,
-    185, 188, 193, 194, 195, 212, 213, 217
-  ];
-  
-  // Check if first octet is in European range
-  for (var i = 0; i < europeanFirstOctets.length; i++) {
-    if (dna.first === europeanFirstOctets[i]) {
-      // Double-check: not Jordan or Gulf
-      if (isJordanTier1(host) || isGulfCoalition(host)) {
-        return false;
-      }
-      
-      // Additional European indicators
-      if (dna.second >= 0 && dna.second <= 255) {
-        // Check common European ISP patterns
-        var isDefinitelyEurope = (
-          // Deutsche Telekom patterns
-          (dna.first === 77 || dna.first === 91) ||
-          // British Telecom
-          (dna.first === 80 || dna.first === 86) ||
-          // France Telecom
-          (dna.first === 82 || dna.first === 90) ||
-          // Italian ISPs
-          (dna.first === 79 || dna.first === 87) ||
-          // Spanish ISPs
-          (dna.first === 83 || dna.first === 88)
-        );
-        
-        if (isDefinitelyEurope) return true;
-      }
-    }
-  }
-  
-  return false;
+function hasJordanPOP(host){
+  return (
+    // ☁️ Cloudflare - Amman POP confirmed
+    (isInNet(host, "104.16.0.0",  "255.240.0.0") && !hasEuropeHop(host)) ||
+    (isInNet(host, "172.64.0.0",  "255.192.0.0") && !hasEuropeHop(host)) ||
+    (isInNet(host, "188.114.96.0","255.255.224.0") && !hasEuropeHop(host)) ||
+
+    // 🔍 Google - Amman Cache confirmed
+    (isInNet(host, "142.250.0.0", "255.254.0.0") && !hasEuropeHop(host)) ||
+    (isInNet(host, "142.251.0.0", "255.255.0.0") && !hasEuropeHop(host)) ||
+    (isInNet(host, "172.217.0.0", "255.255.0.0") && !hasEuropeHop(host)) ||
+
+    // 📘 Meta - ME POP
+    (isInNet(host, "157.240.0.0", "255.252.0.0") && !hasEuropeHop(host))
+  );
 }
 
 /* ========================================
-   🎮 TENCENT CLOUD DEEP INSPECTION
-   فحص عميق لسحابة تنسنت
+   🌍 GULF TIER 1 (بدون أوروبا)
    ======================================== */
-function inspectTencentCloud(host, url){
-  var fullText = (host + " " + url).toLowerCase();
+function isGulfDirect(host){
+  if (hasEuropeHop(host)) return false;
   
-  var regions = [
-    // Middle East - PRIORITY
-    {
-      patterns: [/bahrain/i, /\bbh\b/i, /me-east/i, /ap-bahrain/i],
-      region: "BAHRAIN",
-      priority: 100,
-      proxy: "MATCH_JO_1"
-    },
-    {
-      patterns: [/dubai/i, /\buae\b/i, /me-south/i, /ap-dubai/i],
-      region: "UAE",
-      priority: 95,
-      proxy: "MATCH_JO_1"
-    },
-    
-    // Asia - ACCEPTABLE
-    {
-      patterns: [/mumbai/i, /india/i, /\bin\b/i, /ap-mumbai/i, /ap-south/i],
-      region: "MUMBAI",
-      priority: 75,
-      proxy: "MATCH_JO_2"
-    },
-    {
-      patterns: [/singapore/i, /\bsg\b/i, /ap-singapore/i, /sea/i],
-      region: "SINGAPORE",
-      priority: 70,
-      proxy: "MATCH_JO_2"
-    },
-    {
-      patterns: [/hongkong/i, /\bhk\b/i, /ap-hongkong/i],
-      region: "HONGKONG",
-      priority: 65,
-      proxy: "MATCH_JO_3"
-    },
-    {
-      patterns: [/tokyo/i, /japan/i, /\bjp\b/i, /ap-tokyo/i, /ap-northeast/i],
-      region: "TOKYO",
-      priority: 60,
-      proxy: "MATCH_JO_3"
-    },
-    
-    // Europe - BLACKLISTED
-    {
-      patterns: [/frankfurt/i, /germany/i, /\bde\b/i, /eu-central/i, /europe/i],
-      region: "EUROPE",
-      priority: -1000,
-      proxy: "BLACKHOLE"
-    },
-    {
-      patterns: [/london/i, /\buk\b/i, /eu-west/i],
-      region: "EUROPE",
-      priority: -1000,
-      proxy: "BLACKHOLE"
-    },
-    {
-      patterns: [/paris/i, /france/i, /\bfr\b/i],
-      region: "EUROPE",
-      priority: -1000,
-      proxy: "BLACKHOLE"
-    }
-  ];
-  
-  var bestMatch = null;
-  var highestPriority = -9999;
-  
-  for (var i = 0; i < regions.length; i++) {
-    var region = regions[i];
-    for (var j = 0; j < region.patterns.length; j++) {
-      if (region.patterns[j].test(fullText)) {
-        if (region.priority > highestPriority) {
-          bestMatch = region;
-          highestPriority = region.priority;
-        }
-      }
-    }
-  }
-  
-  return bestMatch;
+  return (
+    // 🇦🇪 UAE - Direct only
+    isInNet(host, "5.0.0.0",     "255.128.0.0") ||
+    isInNet(host, "213.42.0.0",  "255.254.0.0") ||
+    isInNet(host, "31.222.0.0",  "255.254.0.0") ||
+    isInNet(host, "85.15.0.0",   "255.255.0.0") ||
+
+    // 🇸🇦 Saudi - Direct only
+    isInNet(host, "85.25.0.0",   "255.255.0.0") ||
+    isInNet(host, "188.245.0.0", "255.255.0.0") ||
+    isInNet(host, "213.130.0.0", "255.254.0.0") ||
+
+    // 🇰🇼 Kuwait - Direct only
+    isInNet(host, "87.236.0.0",  "255.254.0.0") ||
+
+    // 🇧🇭 Bahrain - Direct only
+    isInNet(host, "37.223.0.0",  "255.255.0.0") ||
+
+    // 🇶🇦 Qatar - Direct only
+    isInNet(host, "37.210.0.0",  "255.254.0.0")
+  );
 }
 
 /* ========================================
-   🔬 DEEP PACKET INSPECTION SIMULATION
-   محاكاة فحص الباكيت العميق
+   🎯 ASIA-PACIFIC TIER (لببجي)
+   مسارات آسيوية مباشرة بدون أوروبا
    ======================================== */
-function deepPacketInspection(url){
-  var analysis = {
-    type: "unknown",
-    confidence: 0,
-    isMatch: false,
-    isLobby: false
-  };
+function isAsiaDirectPath(host){
+  if (hasEuropeHop(host)) return false;
   
+  return (
+    // 🇨🇳 China Telecom / Unicom (Tencent backbone)
+    isInNet(host, "58.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "59.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "60.0.0.0",    "252.0.0.0") ||
+    isInNet(host, "61.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "106.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "110.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "111.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "112.0.0.0",   "248.0.0.0") ||
+    isInNet(host, "113.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "114.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "115.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "116.0.0.0",   "252.0.0.0") ||
+    isInNet(host, "117.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "118.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "119.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "120.0.0.0",   "248.0.0.0") ||
+    isInNet(host, "121.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "122.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "123.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "124.0.0.0",   "252.0.0.0") ||
+    isInNet(host, "125.0.0.0",   "255.0.0.0") ||
+
+    // 🇸🇬 Singapore (SEA servers)
+    isInNet(host, "103.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "202.0.0.0",   "254.0.0.0") ||
+
+    // 🇯🇵 Japan (TYO servers)
+    isInNet(host, "126.0.0.0",   "254.0.0.0") ||
+    isInNet(host, "133.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "153.0.0.0",   "255.0.0.0") ||
+    isInNet(host, "163.0.0.0",   "255.0.0.0") ||
+
+    // 🇮🇳 India (Mumbai)
+    isInNet(host, "14.0.0.0",    "254.0.0.0") ||
+    isInNet(host, "27.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "49.0.0.0",    "255.0.0.0") ||
+    isInNet(host, "106.0.0.0",   "254.0.0.0")
+  );
+}
+
+/* ========================================
+   🎮 PUBG DETECTION (شامل)
+   ======================================== */
+function isPUBG(host, url){
+  var s = ((host || "") + " " + (url || "")).toLowerCase();
+  return (
+    // Domain keywords
+    /pubg|pubgm|pubgmobile|intlgame|igamecj|krafton/i.test(s) ||
+    /tencent|qq\.com|lightspeed|proximabeta|amsoveasea/i.test(s) ||
+    /gcloud|qcloud|tencentcs|myqcloud/i.test(s) ||
+    
+    // Game services
+    /vmp|gme|gamecenter|voice|voip|anticheat|pandora|bugly/i.test(s) ||
+    
+    // Analytics
+    /adjust|appsflyer|analytics|firebase|crashlytics/i.test(s)
+  );
+}
+
+/* ========================================
+   🎮 GAMEPLAY vs 🏠 LOBBY
+   ======================================== */
+function isGameplay(url){
   var u = (url || "").toLowerCase();
-  var urlLength = u.length;
-  
-  // Pattern 1: Direct IP connections (usually match servers)
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(u) && urlLength < 30) {
-    analysis.type = "match_server";
-    analysis.isMatch = true;
-    analysis.confidence = 95;
-    return analysis;
-  }
-  
-  // Pattern 2: WebSocket connections (real-time game)
-  if (/ws:\/\/|wss:\/\//i.test(u)) {
-    analysis.type = "websocket_game";
-    analysis.isMatch = true;
-    analysis.confidence = 90;
-    return analysis;
-  }
-  
-  // Pattern 3: UDP relay indicators
-  if (/relay|turn|stun|ice/i.test(u)) {
-    analysis.type = "voice_relay";
-    analysis.isMatch = true;
-    analysis.confidence = 85;
-    return analysis;
-  }
-  
-  // Pattern 4: API endpoints (lobby functions)
-  if (/\/api\/|\/v\d+\/|\.json|\.php/i.test(u) && urlLength > 50) {
-    analysis.type = "api_call";
-    analysis.isLobby = true;
-    analysis.confidence = 80;
-    return analysis;
-  }
-  
-  // Pattern 5: Asset loading (can be direct)
-  if (/\.(jpg|png|webp|mp4|m4a|bundle|pak|bin)(\?|$)/i.test(u)) {
-    analysis.type = "asset";
-    analysis.isLobby = true;
-    analysis.confidence = 70;
-    return analysis;
-  }
-  
-  // Pattern 6: Match-specific keywords
-  var matchKeywords = [
-    "battle", "combat", "fight", "game", "match", "play", "versus",
-    "arena", "tdm", "classic", "spawn", "loot", "zone", "circle"
-  ];
-  
-  var matchCount = 0;
-  for (var i = 0; i < matchKeywords.length; i++) {
-    if (u.indexOf(matchKeywords[i]) !== -1) matchCount++;
-  }
-  
-  if (matchCount >= 2) {
-    analysis.type = "match_related";
-    analysis.isMatch = true;
-    analysis.confidence = 75;
-    return analysis;
-  }
-  
-  // Pattern 7: Lobby-specific keywords
-  var lobbyKeywords = [
-    "lobby", "room", "queue", "matchmaking", "invite", "friend",
-    "shop", "store", "inventory", "profile", "settings", "news"
-  ];
-  
-  var lobbyCount = 0;
-  for (var i = 0; i < lobbyKeywords.length; i++) {
-    if (u.indexOf(lobbyKeywords[i]) !== -1) lobbyCount++;
-  }
-  
-  if (lobbyCount >= 2) {
-    analysis.type = "lobby_related";
-    analysis.isLobby = true;
-    analysis.confidence = 75;
-    return analysis;
-  }
-  
-  return analysis;
+  return (
+    // Gameplay keywords
+    /arena|tdm|deathmatch|domination|gun|gungame|training|warehouse|hangar|runic|library/i.test(u) ||
+    /wow|ugc|creative|creation|template|map|featured|trending|workshop|editor|publish/i.test(u) ||
+    /classic|erangel|miramar|sanhok|vikendi|livik|karakin|taego|deston|nusa/i.test(u) ||
+    /evo|evoground|payload|infection|zombie|metro|metroroyale|survivor|pve/i.test(u) ||
+    /match|game|play|battle|combat|fight|versus|vs|enemy|kill|weapon|loot|drop|zone|circle/i.test(u) ||
+    /stats|rank|tier|rating|leaderboard|achievement|medal|title|frame|outfit|skin/i.test(u)
+  );
+}
+
+function isLobby(url){
+  var u = (url || "").toLowerCase();
+  return (
+    /lobby|matchmaking|queue|waiting|search|finding|join/i.test(u) ||
+    /room|customroom|recruit|team|squad|party|invite|friend|clan|crew/i.test(u) ||
+    /dispatcher|router|region|allocation|server|ping|latency|connection/i.test(u) ||
+    /shop|store|mall|purchase|buy|item|crate|chest|box|spin|draw/i.test(u) ||
+    /inventory|backpack|locker|warehouse|stash|collection/i.test(u) ||
+    /news|event|notice|announcement|update|patch|season|pass|mission|quest|task/i.test(u) ||
+    /setting|config|preference|option|control|graphic|audio|sensitivity/i.test(u) ||
+    /share|facebook|twitter|youtube|instagram|discord|link|url|web/i.test(u)
+  );
 }
 
 /* ========================================
-   🧮 MULTI-DIMENSIONAL SCORING
-   تسجيل متعدد الأبعاد
+   🎲 FINGERPRINT (stable hash)
    ======================================== */
-function calculateMultiScore(host, url){
-  var score = {
-    jordan: 0,
-    gulf: 0,
-    cdn: 0,
-    asia: 0,
-    europe: 0,
-    total: 0,
-    recommendation: ""
-  };
+function fingerprint(host, url){
+  var s = (host || "").substring(0, 30) + "|" + ((url || "").substring(0, 50));
+  var hash = 5381;
   
-  // Dimension 1: Jordan presence
-  if (isJordanTier1(host)) {
-    score.jordan = 100;
+  for (var i = 0; i < s.length; i++){
+    hash = ((hash << 5) + hash) + s.charCodeAt(i);
   }
   
-  // Dimension 2: CDN analysis
-  var cdnInfo = analyzeCDN(host);
-  if (cdnInfo.hasJordanPOP) {
-    score.cdn = cdnInfo.score;
-  }
-  
-  // Dimension 3: Gulf coalition
-  if (isGulfCoalition(host)) {
-    score.gulf = 80;
-  }
-  
-  // Dimension 4: Europe penalty
-  if (isEuropeanDeathZone(host)) {
-    score.europe = -500; // Massive penalty
-  }
-  
-  // Dimension 5: Tencent cloud
-  var tencentInfo = inspectTencentCloud(host, url);
-  if (tencentInfo) {
-    if (tencentInfo.priority > 50) {
-      score.asia = tencentInfo.priority;
-    } else if (tencentInfo.priority < 0) {
-      score.europe = tencentInfo.priority;
-    }
-  }
-  
-  // Calculate total
-  score.total = score.jordan + score.gulf + score.cdn + score.asia + score.europe;
-  
-  // Recommendation
-  if (score.total >= 100) score.recommendation = "TIER_1"; // Best
-  else if (score.total >= 70) score.recommendation = "TIER_2"; // Good
-  else if (score.total >= 40) score.recommendation = "TIER_3"; // Acceptable
-  else if (score.total < 0) score.recommendation = "BLACKLIST"; // Reject
-  else score.recommendation = "TIER_4"; // Low priority
-  
-  return score;
+  return Math.abs(hash) >>> 0; // unsigned 32-bit
 }
 
 /* ========================================
-   🎲 ENHANCED FINGERPRINT
-   بصمة محسنة مع entropy
+   💎 ADVANCED MATCH PICKER
+   توزيع ذكي على 3 بروكسيات
    ======================================== */
-function enhancedFingerprint(host, url){
-  var data = (host || "") + "|" + ((url || "").substring(0, 100));
-  var hash = 0;
-  var entropy = 0;
+function pickMatchProxy(host, fp){
+  var score = 0;
   
-  // DJB2 hash algorithm
-  for (var i = 0; i < data.length; i++) {
-    var char = data.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-    entropy += char % 17; // Add entropy
-  }
+  // 🥇 Tier 1: Jordan Absolute (100% أردني مضمون)
+  if (isJordanAbsolute(host)) score += 1000;
   
-  return {
-    hash: Math.abs(hash) >>> 0,
-    entropy: entropy % 100,
-    mod: function(n) { return (Math.abs(hash) >>> 0) % n; }
-  };
-}
-
-/* ========================================
-   🎯 INTELLIGENT MATCH PROXY SELECTOR
-   اختيار ذكي لبروكسي المباراة
-   ======================================== */
-function selectMatchProxy(host, url, fp){
-  var score = calculateMultiScore(host, url);
+  // 🥈 Tier 2: CDN with Jordan POP
+  if (hasJordanPOP(host)) score += 500;
   
-  // BLACKLIST: Immediate rejection
-  if (score.recommendation === "BLACKLIST") {
-    return PROXY.BLACKHOLE;
-  }
+  // 🥉 Tier 3: Gulf Direct (خليجي بدون أوروبا)
+  if (isGulfDirect(host)) score += 250;
   
-  // TIER 1: Jordan absolute - Concentrate on JO_1
-  if (score.recommendation === "TIER_1") {
-    // 80% on JO_1, 15% on JO_2, 5% on JO_3
-    if (fp.mod(100) < 80) return PROXY.MATCH_JO_1;
-    if (fp.mod(100) < 95) return PROXY.MATCH_JO_2;
+  // 🏅 Tier 4: Asia Direct (آسيوي بدون أوروبا)
+  if (isAsiaDirectPath(host)) score += 100;
+  
+  // 🚫 Penalty: Europe detected
+  if (hasEuropeHop(host)) score = 0;
+  
+  // توزيع حسب الـ score
+  if (score >= 500) {
+    // Tier 1-2: توزيع متساوي على البروكسيات الثلاثة
+    var mod = fp % 3;
+    if (mod === 0) return PROXY.MATCH_JO_1;
+    if (mod === 1) return PROXY.MATCH_JO_2;
     return PROXY.MATCH_JO_3;
   }
   
-  // TIER 2: Good quality - Balanced distribution
-  if (score.recommendation === "TIER_2") {
-    // 60% on JO_1, 30% on JO_2, 10% on JO_3
-    if (fp.mod(100) < 60) return PROXY.MATCH_JO_1;
-    if (fp.mod(100) < 90) return PROXY.MATCH_JO_2;
+  if (score >= 100) {
+    // Tier 3-4: 70% JO_1 / 20% JO_2 / 10% JO_3
+    var mod = fp % 10;
+    if (mod < 7) return PROXY.MATCH_JO_1;
+    if (mod < 9) return PROXY.MATCH_JO_2;
     return PROXY.MATCH_JO_3;
   }
   
-  // TIER 3: Acceptable - More distributed
-  if (score.recommendation === "TIER_3") {
-    // 40% on JO_1, 40% on JO_2, 20% on JO_3
-    if (fp.mod(100) < 40) return PROXY.MATCH_JO_1;
-    if (fp.mod(100) < 80) return PROXY.MATCH_JO_2;
-    return PROXY.MATCH_JO_3;
-  }
-  
-  // TIER 4: Low priority - Even distribution
-  // 33% each
-  var mod3 = fp.mod(3);
-  if (mod3 === 0) return PROXY.MATCH_JO_1;
-  if (mod3 === 1) return PROXY.MATCH_JO_2;
+  // Unknown/Low score: 50% JO_1 / 30% JO_2 / 20% JO_3
+  var mod = fp % 10;
+  if (mod < 5) return PROXY.MATCH_JO_1;
+  if (mod < 8) return PROXY.MATCH_JO_2;
   return PROXY.MATCH_JO_3;
 }
 
 /* ========================================
-   🎮 PUBG ENHANCED DETECTION
+   🧠 MAIN CLASSIFIER
    ======================================== */
-function isPUBGEnhanced(host, url){
-  var combined = ((host || "") + " " + (url || "")).toLowerCase();
+function classifyRoute(host, url){
+  var fp = fingerprint(host, url);
   
-  // Core patterns
-  var corePatterns = [
-    /pubg/i, /pubgm/i, /pubgmobile/i,
-    /intlgame/i, /igamecj/i, /krafton/i,
-    /tencent/i, /qq\.com/i, /lightspeed/i,
-    /proximabeta/i, /amsoveasea/i,
-    /gcloud/i, /qcloud/i, /myqcloud/i, /tencentcs/i
-  ];
-  
-  for (var i = 0; i < corePatterns.length; i++) {
-    if (corePatterns[i].test(combined)) return true;
+  // 🎮 Gameplay → MATCH proxies
+  if (isGameplay(url)) {
+    return pickMatchProxy(host, fp);
   }
   
-  // Service patterns
-  var servicePatterns = [
-    /vmp/i, /gme/i, /voice/i, /voip/i,
-    /anticheat/i, /pandora/i, /bugly/i,
-    /gamecenter/i, /gameserver/i
-  ];
-  
-  for (var i = 0; i < servicePatterns.length; i++) {
-    if (servicePatterns[i].test(combined)) return true;
-  }
-  
-  // Analytics patterns
-  var analyticsPatterns = [
-    /adjust/i, /appsflyer/i, /firebase/i,
-    /crashlytics/i, /analytics/i
-  ];
-  
-  for (var i = 0; i < analyticsPatterns.length; i++) {
-    if (analyticsPatterns[i].test(combined)) return true;
-  }
-  
-  return false;
-}
-
-/* ========================================
-   🧠 MASTER CLASSIFIER
-   المصنف الرئيسي
-   ======================================== */
-function masterClassifier(host, url){
-  var fp = enhancedFingerprint(host, url);
-  
-  // Step 1: Deep packet inspection
-  var packetAnalysis = deepPacketInspection(url);
-  
-  // Step 2: Tencent cloud check
-  var tencentInfo = inspectTencentCloud(host, url);
-  if (tencentInfo) {
-    if (tencentInfo.proxy === "BLACKHOLE") {
-      return PROXY.BLACKHOLE;
-    }
-    if (packetAnalysis.isMatch) {
-      return tencentInfo.proxy;
-    }
-  }
-  
-  // Step 3: European death zone check
-  if (isEuropeanDeathZone(host)) {
-    return PROXY.BLACKHOLE;
-  }
-  
-  // Step 4: Route based on packet type
-  if (packetAnalysis.isMatch && packetAnalysis.confidence >= 80) {
-    return selectMatchProxy(host, url, fp);
-  }
-  
-  if (packetAnalysis.isLobby) {
+  // 🏠 Lobby → LOBBY proxy
+  if (isLobby(url)) {
     return PROXY.LOBBY_MAIN;
   }
   
-  // Step 5: Multi-score based routing
-  var score = calculateMultiScore(host, url);
-  
-  if (score.recommendation === "BLACKLIST") {
-    return PROXY.BLACKHOLE;
+  // 🤔 Undefined → check IP quality
+  if (isJordanAbsolute(host) || hasJordanPOP(host)) {
+    return pickMatchProxy(host, fp);
   }
   
-  if (score.total >= 70) {
-    // High quality path - likely match traffic
-    return selectMatchProxy(host, url, fp);
-  }
-  
-  // Default: lobby
+  // Default: Lobby
   return PROXY.LOBBY_MAIN;
 }
 
@@ -635,11 +336,11 @@ function masterClassifier(host, url){
    🚀 PAC ENTRY POINT
    ======================================== */
 function FindProxyForURL(url, host){
-  // PUBG traffic detection
-  if (isPUBGEnhanced(host, url)) {
-    return masterClassifier(host, url);
+  // ✅ PUBG → Smart routing
+  if (isPUBG(host, url)) {
+    return classifyRoute(host, url);
   }
   
-  // Non-PUBG traffic
+  // ❌ Non-PUBG → DIRECT
   return "DIRECT";
 }
