@@ -1,0 +1,17 @@
+{
+  "headers": [
+    {
+      "source": "/No.pac",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/x-ns-proxy-autoconfig"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    }
+  ]
+}
