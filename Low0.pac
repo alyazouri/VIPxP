@@ -1,0 +1,179 @@
+/* =========================================================
+   🏆 JORDAN TOURNAMENT TITANIUM – ULTRA FINAL
+   IP + NET + HOST + PORT LOCK
+   Zero DIRECT | Sticky Core | Gulf Bias
+   ========================================================= */
+
+var PROXY_A = "PROXY 176.29.153.95:20001";
+var PROXY_B = "PROXY 176.29.153.95:20002";
+var PROXY_C = "PROXY 176.29.153.95:20003";
+
+/* ==============================
+   ⚡ ULTRA HASH ENGINE
+   ============================== */
+function ultraHash(str){
+  var h = 2166136261;
+  for (var i = 0; i < str.length; i++){
+    h ^= str.charCodeAt(i);
+    h += (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24);
+  }
+  return (h >>> 0);
+}
+
+/* ==============================
+   🇯🇴 JORDAN RANGES
+   ============================== */
+function isJordan(host){
+  return (
+    isInNet(host,"46.32.0.0","255.248.0.0") ||
+    isInNet(host,"37.17.0.0","255.255.0.0") ||
+    isInNet(host,"31.44.0.0","255.252.0.0") ||
+    isInNet(host,"94.249.0.0","255.255.0.0") ||
+    isInNet(host,"188.161.0.0","255.255.0.0") ||
+    isInNet(host,"89.28.0.0","255.248.0.0") ||
+    isInNet(host,"102.64.0.0","255.192.0.0")
+  );
+}
+
+/* ==============================
+   🌍 GULF RANGES
+   ============================== */
+function isGulf(host){
+  return (
+    isInNet(host,"5.0.0.0","255.128.0.0") ||
+    isInNet(host,"188.245.0.0","255.255.0.0") ||
+    isInNet(host,"213.42.0.0","255.254.0.0") ||
+    isInNet(host,"31.222.0.0","255.254.0.0") ||
+    isInNet(host,"37.210.0.0","255.254.0.0")
+  );
+}
+
+/* ==============================
+   🛡 REGION TIER
+   ============================== */
+function regionTier(host){
+  if (isJordan(host)) return 3;
+  if (isGulf(host)) return 2;
+  return 1;
+}
+
+/* ==============================
+   🎮 PUBG DETECTION
+   ============================== */
+function isPUBG(host, url){
+  var s = (host + " " + url).toLowerCase();
+
+  return (
+    /pubg|pubgm|pubgmobile|krafton|lightspeed|proximabeta/.test(s) ||
+    /tencent|qcloud|myqcloud|tencentcs/.test(s) ||
+    /amazonaws|aliyun|gcloud|me-south-1/.test(s) ||
+    /battle|match|arena|allocation|session|dispatcher/.test(s) ||
+    /erangel|tdm|payload|metro|rank|classic/.test(s)
+  );
+}
+
+/* ==============================
+   🔐 STICKY CORE
+   ============================== */
+var LOCKED_CORE = null;
+
+function selectCore(host, url){
+
+  if (LOCKED_CORE !== null)
+    return LOCKED_CORE;
+
+  var tier = regionTier(host);
+  var hash = ultraHash(host + url);
+
+  if (tier === 3){
+    LOCKED_CORE = PROXY_A;
+    return LOCKED_CORE;
+  }
+
+  if (tier === 2){
+    var mod = hash % 3;
+    LOCKED_CORE = (mod === 0) ? PROXY_A :
+                  (mod === 1) ? PROXY_B :
+                                PROXY_C;
+    return LOCKED_CORE;
+  }
+
+  LOCKED_CORE = (hash % 2 === 0) ? PROXY_A : PROXY_B;
+  return LOCKED_CORE;
+}
+
+/* ==============================
+   🔒 ULTRA SESSION LOCK
+   ============================== */
+
+var SESSION = {
+  matchIP: null,
+  matchNet: null,
+  matchHost: null,
+  matchPort: null
+};
+
+var BLOCK = "PROXY 0.0.0.0:0";
+
+/* استخراج البورت */
+function extractPort(url){
+
+  if (!url) return "80";
+
+  var parts = url.split(":");
+
+  if (parts.length > 2){
+    return parts[2].split("/")[0];
+  }
+
+  if (url.substring(0,5) === "https")
+    return "443";
+
+  return "80";
+}
+
+/* قفل كامل */
+function enforceUltraSession(host, url){
+
+  var ip = dnsResolve(host);
+  if (!ip) return PROXY_A;
+
+  var port = extractPort(url);
+  var net24 = ip.split('.').slice(0,3).join('.');
+
+  if (!SESSION.matchIP){
+
+    SESSION.matchIP   = ip;
+    SESSION.matchNet  = net24;
+    SESSION.matchHost = host;
+    SESSION.matchPort = port;
+
+    return PROXY_A;
+  }
+
+  if (ip   !== SESSION.matchIP)   return BLOCK;
+  if (net24!== SESSION.matchNet)  return BLOCK;
+  if (host !== SESSION.matchHost) return BLOCK;
+  if (port !== SESSION.matchPort) return BLOCK;
+
+  return PROXY_A;
+}
+
+/* ==============================
+   🚀 MAIN ENGINE
+   ============================== */
+function FindProxyForURL(url, host){
+
+  if (isPUBG(host, url)){
+
+    var tier = regionTier(host);
+
+    if (tier === 3){
+      return enforceUltraSession(host, url);
+    }
+
+    return selectCore(host, url);
+  }
+
+  return PROXY_A; // Zero Direct
+}
