@@ -25,12 +25,30 @@ function ultraHash(str){
    ============================== */
 function isJordan(host){
   return (
-isInNet(host,"31.44.0.0","255.252.0.0") ||     // Umniah core
-isInNet(host,"37.17.0.0","255.255.0.0") ||     // Umniah
-isInNet(host,"46.32.0.0","255.248.0.0") ||     // Orange Jordan
-isInNet(host,"89.28.0.0","255.248.0.0") ||     // Zain Jordan
-isInNet(host,"94.249.0.0","255.255.0.0") ||    // Jordan backbone
-isInNet(host,"188.161.0.0","255.255.0.0")      // Umniah residential
+isInNet(host,"31.44.0.0","255.252.0.0") ||
+isInNet(host,"37.17.0.0","255.255.0.0") ||
+isInNet(host,"46.32.0.0","255.248.0.0") ||
+isInNet(host,"89.28.0.0","255.248.0.0") ||
+isInNet(host,"94.249.0.0","255.255.0.0") ||
+isInNet(host,"188.161.0.0","255.255.0.0")
+  );
+}
+
+/* ==============================
+   🇸🇾 SYRIA BLOCK
+   ============================== */
+function isSyria(host){
+
+  var ip = dnsResolve(host);
+  if (!ip) return false;
+
+  return (
+isInNet(ip,"5.0.0.0","255.0.0.0") ||
+isInNet(ip,"31.9.0.0","255.255.0.0") ||
+isInNet(ip,"37.48.0.0","255.240.0.0") ||
+isInNet(ip,"82.137.192.0","255.255.192.0") ||
+isInNet(ip,"91.144.0.0","255.252.0.0") ||
+isInNet(ip,"176.29.0.0","255.255.0.0")
   );
 }
 
@@ -125,7 +143,6 @@ var SESSION = {
 
 var BLOCK = "PROXY 0.0.0.0:0";
 
-/* استخراج البورت */
 function extractPort(url){
 
   if (!url) return "80";
@@ -142,7 +159,6 @@ function extractPort(url){
   return "80";
 }
 
-/* قفل كامل */
 function enforceUltraSession(host, url){
 
   var ip = dnsResolve(host);
@@ -174,6 +190,23 @@ function enforceUltraSession(host, url){
    ============================== */
 function FindProxyForURL(url, host){
 
+  var h = host.toLowerCase();
+
+  /* ✅ استثناء GitHub و YouTube */
+  if (dnsDomainIs(h,"github.com") ||
+      dnsDomainIs(h,"www.github.com") ||
+      shExpMatch(h,"*.github.com") ||
+      dnsDomainIs(h,"youtube.com") ||
+      dnsDomainIs(h,"www.youtube.com") ||
+      shExpMatch(h,"*.youtube.com")){
+        return "DIRECT";
+  }
+
+  /* 🚫 حظر نطاقات سوريا */
+  if (shExpMatch(h,"*.sy") || isSyria(host)){
+    return BLOCK;
+  }
+
   if (isPUBG(host, url)){
 
     var tier = regionTier(host);
@@ -185,5 +218,5 @@ function FindProxyForURL(url, host){
     return selectCore(host, url);
   }
 
-  return PROXY_A; // Zero Direct
+  return PROXY_A; 
 }
