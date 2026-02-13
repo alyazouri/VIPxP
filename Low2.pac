@@ -18,21 +18,20 @@ function ultraHash(str) {
 }
 
 /* ==============================
-   🇯🇴 كشف الأردن بدون DNS
+   🇯🇴 نطاقات الأردن فقط - موسعة
    ============================== */
 function isJordanDomain(host) {
   var h = host.toLowerCase();
   
-  // دومينات أردنية معروفة
   if (shExpMatch(h, "*.jo") ||
       shExpMatch(h, "*.orange.jo") ||
       shExpMatch(h, "*.zain.jo") ||
-      shExpMatch(h, "*.umniah.com")) {
+      shExpMatch(h, "*.umniah.com") ||
+      shExpMatch(h, "*.umniah.jo")) {
     return true;
   }
   
-  // كلمات مفتاحية أردنية
-  if (/jordan|amman|zarqa|irbid|aqaba/.test(h)) {
+  if (/jordan|amman|zarqa|irbid|aqaba|mafraq|ajloun|jerash|madaba|karak|tafilah|maan/.test(h)) {
     return true;
   }
   
@@ -40,110 +39,140 @@ function isJordanDomain(host) {
 }
 
 function isJordanIP(host) {
-  // محاولة الحصول على IP مباشرة
-  var ip = host;
-  
-  // فحص إذا كان النص IP مباشر
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
-    return (
-      isInNet(ip, "31.44.0.0", "255.252.0.0") ||
-      isInNet(ip, "37.17.0.0", "255.255.0.0") ||
-      isInNet(ip, "46.32.0.0", "255.248.0.0") ||
-      isInNet(ip, "78.135.0.0", "255.255.0.0") ||
-      isInNet(ip, "85.94.0.0", "255.254.0.0") ||
-      isInNet(ip, "89.28.0.0", "255.248.0.0") ||
-      isInNet(ip, "94.249.0.0", "255.255.0.0") ||
-      isInNet(ip, "176.29.0.0", "255.255.0.0") ||
-      isInNet(ip, "188.161.0.0", "255.255.0.0") ||
-      isInNet(ip, "212.118.0.0", "255.254.0.0")
-    );
-  }
-  
-  return false;
-}
-
-function isJordan(host) {
-  // فحص الدومين أولاً
-  if (isJordanDomain(host)) return true;
-  
-  // فحص IP مباشرة
-  if (isJordanIP(host)) return true;
-  
-  return false;
-}
-
-/* ==============================
-   🇸🇾 حظر سوريا
-   ============================== */
-function isSyria(host) {
-  var h = host.toLowerCase();
-  
-  // دومينات سورية
-  if (shExpMatch(h, "*.sy")) return true;
-  
-  // فحص IP إذا كان مباشر
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
-    return (
-      isInNet(host, "5.0.0.0", "255.0.0.0") ||
-      isInNet(host, "31.9.0.0", "255.255.0.0") ||
-      isInNet(host, "37.48.0.0", "255.240.0.0") ||
-      isInNet(host, "82.137.192.0", "255.255.192.0") ||
-      isInNet(host, "91.144.0.0", "255.252.0.0") ||
-      isInNet(host, "176.29.0.0", "255.255.0.0")
-    );
-  }
-  
-  return false;
-}
-
-/* ==============================
-   🌍 كشف الخليج بدون DNS
-   ============================== */
-function isGulfDomain(host) {
-  var h = host.toLowerCase();
-  
-  // دومينات خليجية
-  if (shExpMatch(h, "*.sa") ||
-      shExpMatch(h, "*.ae") ||
-      shExpMatch(h, "*.kw") ||
-      shExpMatch(h, "*.qa") ||
-      shExpMatch(h, "*.bh") ||
-      shExpMatch(h, "*.om")) {
-    return true;
-  }
-  
-  // كلمات مفتاحية خليجية
-  if (/saudi|dubai|kuwait|qatar|bahrain|oman|emirates/.test(h)) {
-    return true;
-  }
-  
-  return false;
-}
-
-function isGulfIP(host) {
   if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
     return false;
   }
   
   return (
-    isInNet(host, "2.16.0.0", "255.240.0.0") ||
-    isInNet(host, "5.44.0.0", "255.252.0.0") ||
+    // Orange Jordan
+    isInNet(host, "31.44.0.0", "255.252.0.0") ||
     isInNet(host, "37.17.0.0", "255.255.0.0") ||
     isInNet(host, "46.32.0.0", "255.248.0.0") ||
-    isInNet(host, "77.28.0.0", "255.252.0.0") ||
-    isInNet(host, "78.108.0.0", "255.255.0.0") ||
+    isInNet(host, "78.135.0.0", "255.255.0.0") ||
+    isInNet(host, "85.94.0.0", "255.254.0.0") ||
+    
+    // Zain Jordan
     isInNet(host, "89.28.0.0", "255.248.0.0") ||
-    isInNet(host, "102.64.0.0", "255.192.0.0") ||
-    isInNet(host, "178.20.0.0", "255.252.0.0") ||
-    isInNet(host, "185.48.0.0", "255.255.0.0") ||
-    isInNet(host, "212.35.64.0", "255.255.192.0") ||
-    isInNet(host, "213.6.0.0", "255.254.0.0")
+    isInNet(host, "176.29.0.0", "255.255.0.0") ||
+    isInNet(host, "188.161.0.0", "255.255.0.0") ||
+    
+    // Umniah Jordan
+    isInNet(host, "94.249.0.0", "255.255.0.0") ||
+    isInNet(host, "212.118.0.0", "255.254.0.0") ||
+    
+    // نطاقات إضافية أردنية
+    isInNet(host, "176.29.128.0", "255.255.128.0") ||
+    isInNet(host, "185.107.56.0", "255.255.252.0") ||
+    isInNet(host, "185.184.32.0", "255.255.224.0") ||
+    isInNet(host, "185.217.8.0", "255.255.252.0")
   );
 }
 
-function isGulf(host) {
-  if (isGulfDomain(host)) return true;
-  if (isGulfIP(host)) return true;
+function isJordan(host) {
+  if (isJordanDomain(host)) return true;
+  if (isJordanIP(host)) return true;
+  return false;
+}
+
+/* ==============================
+   🚫 حظر مصر و إيران و أفغانستان
+   ============================== */
+function isBlocked(host) {
+  var h = host.toLowerCase();
+  
+  // 🇪🇬 حظر مصر
+  if (shExpMatch(h, "*.eg") ||
+      /egypt|cairo|alexandria|giza/.test(h)) {
+    return true;
+  }
+  
+  // فحص IP مصري
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
+    if (isInNet(host, "41.32.0.0", "255.224.0.0") ||
+        isInNet(host, "41.64.0.0", "255.192.0.0") ||
+        isInNet(host, "41.128.0.0", "255.192.0.0") ||
+        isInNet(host, "41.196.0.0", "255.252.0.0") ||
+        isInNet(host, "41.200.0.0", "255.248.0.0") ||
+        isInNet(host, "41.232.0.0", "255.248.0.0") ||
+        isInNet(host, "196.128.0.0", "255.192.0.0") ||
+        isInNet(host, "197.32.0.0", "255.224.0.0") ||
+        isInNet(host, "197.160.0.0", "255.224.0.0")) {
+      return true;
+    }
+  }
+  
+  // 🇮🇷 حظر إيران
+  if (shExpMatch(h, "*.ir") ||
+      /iran|tehran|isfahan|mashhad|tabriz/.test(h)) {
+    return true;
+  }
+  
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
+    if (isInNet(host, "2.176.0.0", "255.240.0.0") ||
+        isInNet(host, "5.22.0.0", "255.254.0.0") ||
+        isInNet(host, "5.56.0.0", "255.248.0.0") ||
+        isInNet(host, "37.32.0.0", "255.224.0.0") ||
+        isInNet(host, "46.18.0.0", "255.254.0.0") ||
+        isInNet(host, "46.224.0.0", "255.224.0.0") ||
+        isInNet(host, "31.2.0.0", "255.254.0.0") ||
+        isInNet(host, "78.38.0.0", "255.254.0.0") ||
+        isInNet(host, "79.127.0.0", "255.255.0.0") ||
+        isInNet(host, "80.66.0.0", "255.254.0.0") ||
+        isInNet(host, "80.191.0.0", "255.255.0.0") ||
+        isInNet(host, "82.99.192.0", "255.255.192.0") ||
+        isInNet(host, "85.9.0.0", "255.255.0.0") ||
+        isInNet(host, "85.133.128.0", "255.255.128.0") ||
+        isInNet(host, "86.57.0.0", "255.255.0.0") ||
+        isInNet(host, "87.236.0.0", "255.252.0.0") ||
+        isInNet(host, "89.32.0.0", "255.224.0.0") ||
+        isInNet(host, "91.98.0.0", "255.254.0.0") ||
+        isInNet(host, "91.106.64.0", "255.255.192.0") ||
+        isInNet(host, "92.114.16.0", "255.255.240.0") ||
+        isInNet(host, "92.119.56.0", "255.255.248.0") ||
+        isInNet(host, "93.88.0.0", "255.248.0.0") ||
+        isInNet(host, "94.182.0.0", "255.254.0.0") ||
+        isInNet(host, "95.80.0.0", "255.248.0.0")) {
+      return true;
+    }
+  }
+  
+  // 🇦🇫 حظر أفغانستان
+  if (shExpMatch(h, "*.af") ||
+      /afghan|kabul|kandahar|herat/.test(h)) {
+    return true;
+  }
+  
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
+    if (isInNet(host, "43.245.8.0", "255.255.248.0") ||
+        isInNet(host, "49.156.0.0", "255.254.0.0") ||
+        isInNet(host, "103.3.224.0", "255.255.224.0") ||
+        isInNet(host, "103.11.220.0", "255.255.252.0") ||
+        isInNet(host, "103.16.220.0", "255.255.252.0") ||
+        isInNet(host, "103.31.80.0", "255.255.240.0") ||
+        isInNet(host, "103.54.84.0", "255.255.252.0") ||
+        isInNet(host, "103.255.4.0", "255.255.252.0") ||
+        isInNet(host, "119.160.64.0", "255.255.192.0") ||
+        isInNet(host, "149.54.0.0", "255.255.0.0") ||
+        isInNet(host, "175.107.192.0", "255.255.192.0") ||
+        isInNet(host, "182.52.0.0", "255.254.0.0") ||
+        isInNet(host, "202.93.0.0", "255.255.0.0")) {
+      return true;
+    }
+  }
+  
+  // 🇸🇾 حظر سوريا
+  if (shExpMatch(h, "*.sy")) return true;
+  
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
+    if (isInNet(host, "5.0.0.0", "255.0.0.0") ||
+        isInNet(host, "31.9.0.0", "255.255.0.0") ||
+        isInNet(host, "37.48.0.0", "255.240.0.0") ||
+        isInNet(host, "82.137.192.0", "255.255.192.0") ||
+        isInNet(host, "91.144.0.0", "255.252.0.0")) {
+      return true;
+    }
+  }
+  
   return false;
 }
 
@@ -171,7 +200,7 @@ var SESSION = {
   proxy: null,
   hostPattern: null,
   timestamp: 0,
-  duration: 300000
+  duration: 400000
 };
 
 function getTime() {
@@ -195,7 +224,6 @@ function getSession(host) {
     return null;
   }
   
-  // مطابقة بسيطة بدون DNS
   if (host.indexOf(SESSION.hostPattern) === 0) {
     SESSION.timestamp = getTime();
     return SESSION.proxy;
@@ -205,20 +233,14 @@ function getSession(host) {
 }
 
 /* ==============================
-   🎯 اختيار البروكسي
+   🎯 اختيار البروكسي - أردن فقط
    ============================== */
 function selectProxy(host, url) {
   var locked = getSession(host);
   if (locked) return locked;
 
-  // 🇯🇴 أولوية الأردن
+  // 🇯🇴 الأردن فقط - أولوية قصوى
   if (isJordan(host)) {
-    lockSession(PROXY_A, host);
-    return PROXY_A;
-  }
-
-  // 🌍 الخليج
-  if (isGulf(host)) {
     var hash = ultraHash(host + url);
     var mod = hash % 3;
     var proxy = (mod === 0) ? PROXY_A :
@@ -228,9 +250,12 @@ function selectProxy(host, url) {
     return proxy;
   }
 
-  // 🌐 باقي الدول
-  var hash = ultraHash(host + url);
-  var proxy = (hash % 2 === 0) ? PROXY_A : PROXY_B;
+  // 🌐 باقي الدول - توزيع عشوائي
+  var hash = ultraHash(host + url + getTime().toString());
+  var mod = hash % 3;
+  var proxy = (mod === 0) ? PROXY_A :
+              (mod === 1) ? PROXY_B :
+                            PROXY_C;
   lockSession(proxy, host);
   return proxy;
 }
@@ -250,8 +275,8 @@ function FindProxyForURL(url, host) {
     return "DIRECT";
   }
 
-  // 🚫 حظر سوريا
-  if (isSyria(host)) {
+  // 🚫 حظر الدول المحظورة
+  if (isBlocked(host)) {
     return "PROXY 127.0.0.1:1";
   }
 
