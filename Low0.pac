@@ -149,7 +149,7 @@ function enforceUltraSession(host, url){
   if (!ip) return PROXY_A;
 
   var port = extractPort(url);
-  var net24 = ip.split('.').slice(0,3).join('.');
+  var net24 = ip.split('.').slice(0,2).join('.');
 
   if (!SESSION.matchIP){
 
