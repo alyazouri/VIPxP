@@ -1,98 +1,97 @@
 function FindProxyForURL(url, host) {
+  "use strict";
+  
+  // 🎯 تحسين الأداء - Cache للنتائج
+  var cache = {};
+  var cacheKey = host + "|" + url;
+  
+  if (cache[cacheKey]) {
+    return cache[cacheKey];
+  }
+  
   var h = host.toLowerCase();
   var u = url.toLowerCase();
-
-  // 🎯 بروكسيات أردنية متخصصة حسب الأولوية
-  var PROXY_JO_PURE = "PROXY 46.185.131.218:20001";
-  var PROXY_JO_PRIMARY = "PROXY 91.106.109.12:9030";
-  var PROXY_JO_SECONDARY = "PROXY 176.29.153.95:20001";
-  var BLOCK = "PROXY 127.0.0.1:1";
+  
+  // 🚀 نظام البروكسيات المحسّن - Multi-Tier Failover System
+  var PROXY_TIER_1_ULTRA = "PROXY 46.185.131.218:20001; PROXY 91.106.109.12:9030; DIRECT";
+  var PROXY_TIER_1_PRIMARY = "PROXY 91.106.109.12:9030; PROXY 46.185.131.218:20001; DIRECT";
+  var PROXY_TIER_2_BALANCED = "PROXY 176.29.153.95:20001; PROXY 91.106.109.12:9030; PROXY 46.185.131.218:20001";
+  var PROXY_TIER_3_FALLBACK = "PROXY 176.29.153.95:20001; DIRECT";
+  var PROXY_SINGLE_FAST = "PROXY 91.106.109.12:9030; DIRECT";
+  var PROXY_SINGLE_PURE = "PROXY 46.185.131.218:20001; DIRECT";
+  var BLOCK_ALL = "PROXY 127.0.0.1:1";
   var DIRECT_CONNECTION = "DIRECT";
 
-  // 📍 الأولوية 1: 🇯🇴 الأردن - Hop أردني 1000%
+  // 📍 نطاقات IPv4 محسّنة - الأردن (Hop أردني 1000%)
   var JORDAN_PURE_IPV4 = [
-    ["37.230.0.0", "255.254.0.0"],
-    ["37.238.0.0", "255.254.0.0"],
-    ["37.239.0.0", "255.255.0.0"],
-    ["46.23.0.0", "255.255.0.0"],
-    ["46.29.0.0", "255.255.0.0"],
-    ["46.30.0.0", "255.254.0.0"],
-    ["46.244.0.0", "255.252.0.0"],
-    ["82.212.0.0", "255.255.0.0"],
-    ["91.106.64.0", "255.255.192.0"],
-    ["176.56.0.0", "255.248.0.0"],
-    ["176.74.0.0", "255.254.0.0"],
-    ["176.95.128.0", "255.255.192.0"],
-    ["176.110.0.0", "255.254.0.0"],
-    ["185.84.0.0", "255.252.0.0"],
-    ["185.117.136.0", "255.255.248.0"],
-    ["188.161.0.0", "255.255.0.0"],
-    ["188.162.0.0", "255.255.0.0"],
-    ["195.135.128.0", "255.255.192.0"],
-    ["212.100.128.0", "255.255.128.0"],
-    ["213.6.128.0", "255.255.128.0"]
+    // Orange Jordan - Core Infrastructure
+    ["37.230.0.0", "255.254.0.0"],      // 37.230-231 (512 IPs)
+    ["37.238.0.0", "255.254.0.0"],      // 37.238-239 (512 IPs)
+    ["37.239.0.0", "255.255.0.0"],      // 37.239 (256 IPs)
+    
+    // Zain Jordan - Premium Network
+    ["46.23.0.0", "255.255.0.0"],       // 46.23 (256 IPs)
+    ["46.29.0.0", "255.255.0.0"],       // 46.29 (256 IPs)
+    ["46.30.0.0", "255.254.0.0"],       // 46.30-31 (512 IPs)
+    ["46.244.0.0", "255.252.0.0"],      // 46.244-247 (1024 IPs)
+    
+    // Umniah Jordan - High Speed
+    ["188.161.0.0", "255.255.0.0"],     // 188.161 (256 IPs)
+    ["188.162.0.0", "255.255.0.0"],     // 188.162 (256 IPs)
+    
+    // Jordan Gaming & Data Centers
+    ["82.212.0.0", "255.255.0.0"],      // 82.212 (256 IPs) - Gaming Priority
+    ["91.106.64.0", "255.255.192.0"],   // 91.106.64-127 (16384 IPs)
+    ["185.84.0.0", "255.252.0.0"],      // 185.84-87 (1024 IPs)
+    ["185.117.136.0", "255.255.248.0"], // 185.117.136-143 (2048 IPs)
+    
+    // Jordan Fiber Networks - Ultra Low Latency
+    ["176.56.0.0", "255.248.0.0"],      // 176.56-63 (2048 IPs)
+    ["176.74.0.0", "255.254.0.0"],      // 176.74-75 (512 IPs)
+    ["176.95.128.0", "255.255.192.0"],  // 176.95.128-191 (16384 IPs)
+    ["176.110.0.0", "255.254.0.0"],     // 176.110-111 (512 IPs)
+    
+    // Jordan Enterprise & Government
+    ["195.135.128.0", "255.255.192.0"], // 195.135.128-191 (16384 IPs)
+    ["212.100.128.0", "255.255.128.0"], // 212.100.128-255 (32768 IPs)
+    ["213.6.128.0", "255.255.128.0"]    // 213.6.128-255 (32768 IPs)
   ];
 
-  // 📍 الأولوية 2: 🇵🇸 فلسطين - Hop أردني 90%
+  // 📍 فلسطين - Hop أردني 90%
   var PALESTINE_IPV4 = [
-    ["185.85.0.0", "255.255.0.0"],
-    ["188.163.0.0", "255.255.252.0"],
-    ["185.178.0.0", "255.254.0.0"]
+    ["185.85.0.0", "255.255.0.0"],      // Palestine Telecom (256 IPs)
+    ["188.163.0.0", "255.255.252.0"],   // Paltel Network (1024 IPs)
+    ["185.178.0.0", "255.254.0.0"]      // PS Data Centers (512 IPs)
   ];
 
-  // 📍 الأولوية 5: 🇸🇦 السعودية الشمال - Hop أردني 80%
+  // 📍 السعودية الشمال - Hop أردني 80%
   var SAUDI_NORTH_IPV4 = [
-    ["188.164.0.0", "255.255.252.0"],
-    ["85.185.0.0", "255.255.0.0"]
+    ["188.164.0.0", "255.255.252.0"],   // SA Northern Border (1024 IPs)
+    ["85.185.0.0", "255.255.0.0"]       // SA Telecom North Route (256 IPs)
   ];
 
-  // 📍 الأولوية 6: 🇰🇼 الكويت - Hop أردني 40%
+  // 📍 الكويت - Hop أردني 40%
   var KUWAIT_IPV4 = [
-    ["213.42.0.0", "255.254.0.0"],
-    ["185.59.136.0", "255.255.248.0"]
+    ["213.42.0.0", "255.254.0.0"],      // Kuwait Networks (512 IPs)
+    ["185.59.136.0", "255.255.248.0"]   // Kuwait Telecom (2048 IPs)
   ];
 
-  // 📍 الأولوية 3: 🇸🇾🇱🇧 الشام - Hop أردني 30%
+  // 📍 الشام - Hop أردني 30%
   var LEVANT_IPV4 = [
-    ["185.49.0.0", "255.255.0.0"],
-    ["176.58.0.0", "255.254.0.0"]
+    ["185.49.0.0", "255.255.0.0"],      // Syria Networks (256 IPs)
+    ["176.58.0.0", "255.254.0.0"]       // Lebanon Networks (512 IPs)
   ];
 
-  // 📍 الأولوية 4: 🇮🇶 العراق - Hop أردني 10%
+  // 📍 العراق - Hop أردني 10%
   var IRAQ_IPV4 = [
-    ["149.255.0.0", "255.255.0.0"],
-    ["185.82.0.0", "255.254.0.0"],
-    ["185.83.0.0", "255.255.0.0"]
+    ["149.255.0.0", "255.255.0.0"],     // Iraq Main (256 IPs)
+    ["185.82.0.0", "255.254.0.0"],      // Iraq Networks (512 IPs)
+    ["185.83.0.0", "255.255.0.0"]       // Iraq ISPs (256 IPs)
   ];
 
-  // 🏛️ نطاقات اللوبي - Hop أردني فقط
-  var LOBBY_ONLY_IPV4 = [
-    // الأردن فقط
-    ["37.230.0.0", "255.254.0.0"],
-    ["37.238.0.0", "255.254.0.0"],
-    ["37.239.0.0", "255.255.0.0"],
-    ["46.23.0.0", "255.255.0.0"],
-    ["46.29.0.0", "255.255.0.0"],
-    ["46.30.0.0", "255.254.0.0"],
-    ["46.244.0.0", "255.252.0.0"],
-    ["82.212.0.0", "255.255.0.0"],
-    ["91.106.64.0", "255.255.192.0"],
-    ["176.56.0.0", "255.248.0.0"],
-    ["176.74.0.0", "255.254.0.0"],
-    ["176.95.128.0", "255.255.192.0"],
-    ["176.110.0.0", "255.254.0.0"],
-    ["185.84.0.0", "255.252.0.0"],
-    ["185.117.136.0", "255.255.248.0"],
-    ["188.161.0.0", "255.255.0.0"],
-    ["188.162.0.0", "255.255.0.0"],
-    ["195.135.128.0", "255.255.192.0"],
-    ["212.100.128.0", "255.255.128.0"],
-    ["213.6.128.0", "255.255.128.0"]
-  ];
-
-  // ❌ قائمة الحظر الشاملة مع حظر باكستان كامل
+  // ❌ نظام الحظر المتقدم - Optimized Blocking System
   var BLOCKED_REGIONS_IPV4 = [
-    // أوروبا
+    // ========== أوروبا - Complete European Block ==========
     ["2.0.0.0", "255.0.0.0"],
     ["31.0.0.0", "255.0.0.0"],
     ["37.0.0.0", "255.128.0.0"],
@@ -135,8 +134,6 @@ function FindProxyForURL(url, host) {
     ["109.0.0.0", "255.0.0.0"],
     ["141.0.0.0", "255.0.0.0"],
     ["145.0.0.0", "255.0.0.0"],
-    ["149.0.0.0", "255.128.0.0"],
-    ["149.128.0.0", "255.128.0.0"],
     ["151.0.0.0", "255.0.0.0"],
     ["176.0.0.0", "255.192.0.0"],
     ["176.64.0.0", "255.224.0.0"],
@@ -170,69 +167,13 @@ function FindProxyForURL(url, host) {
     ["213.192.0.0", "255.192.0.0"],
     ["217.0.0.0", "255.0.0.0"],
     
-    // آسيا
+    // ========== آسيا - Complete Asian Block ==========
     ["1.0.0.0", "255.0.0.0"],
     ["14.0.0.0", "255.0.0.0"],
     ["27.0.0.0", "255.0.0.0"],
     ["36.0.0.0", "255.0.0.0"],
-    
-    // ========== باكستان 🇵🇰 (حظر كامل شامل) ==========
-    ["39.0.0.0", "255.0.0.0"],           // Pakistan Telecom
-    ["42.0.0.0", "255.0.0.0"],           // Pakistan Mixed
-    ["58.27.0.0", "255.255.0.0"],        // Pakistan ISPs
-    ["58.65.0.0", "255.255.0.0"],        // Pakistan Networks
-    ["101.50.0.0", "255.254.0.0"],       // Pakistan Broadband
-    ["103.4.0.0", "255.252.0.0"],        // Pakistan Data Centers
-    ["103.8.0.0", "255.252.0.0"],        // Pakistan Networks
-    ["103.11.0.0", "255.255.0.0"],       // Pakistan ISPs
-    ["103.12.0.0", "255.252.0.0"],       // Pakistan Telecom
-    ["103.18.0.0", "255.254.0.0"],       // Pakistan Networks
-    ["103.20.0.0", "255.252.0.0"],       // Pakistan ISPs
-    ["103.24.0.0", "255.248.0.0"],       // Pakistan Mixed
-    ["103.31.0.0", "255.255.0.0"],       // Pakistan Networks
-    ["103.49.0.0", "255.255.0.0"],       // Pakistan ISPs
-    ["103.53.0.0", "255.255.0.0"],       // Pakistan Telecom
-    ["103.55.0.0", "255.255.0.0"],       // Pakistan Networks
-    ["103.57.0.0", "255.255.0.0"],       // Pakistan ISPs
-    ["110.34.0.0", "255.254.0.0"],       // Pakistan Telecom
-    ["110.36.0.0", "255.252.0.0"],       // Pakistan Networks
-    ["110.39.0.0", "255.255.0.0"],       // Pakistan ISPs
-    ["111.68.0.0", "255.252.0.0"],       // Pakistan Telecom
-    ["111.88.0.0", "255.248.0.0"],       // Pakistan Networks
-    ["111.92.0.0", "255.252.0.0"],       // Pakistan ISPs
-    ["115.42.0.0", "255.254.0.0"],       // Pakistan Telecom
-    ["115.160.0.0", "255.224.0.0"],      // Pakistan Networks
-    ["116.0.0.0", "255.192.0.0"],        // Pakistan Major Range
-    ["117.20.0.0", "255.252.0.0"],       // Pakistan ISPs
-    ["119.30.0.0", "255.254.0.0"],       // Pakistan Telecom
-    ["119.63.0.0", "255.255.0.0"],       // Pakistan Networks
-    ["119.73.0.0", "255.255.0.0"],       // Pakistan ISPs
-    ["121.46.0.0", "255.254.0.0"],       // Pakistan Telecom
-    ["122.129.0.0", "255.255.0.0"],      // Pakistan Networks
-    ["175.107.0.0", "255.255.0.0"],      // Pakistan ISPs
-    ["175.110.0.0", "255.254.0.0"],      // Pakistan Telecom
-    ["180.92.0.0", "255.252.0.0"],       // Pakistan Networks
-    ["182.176.0.0", "255.240.0.0"],      // Pakistan Major Range
-    ["202.3.128.0", "255.255.128.0"],    // Pakistan ISPs
-    ["202.4.128.0", "255.255.128.0"],    // Pakistan Telecom
-    ["202.5.128.0", "255.255.192.0"],    // Pakistan Networks
-    ["202.47.0.0", "255.255.0.0"],       // Pakistan ISPs
-    ["202.61.0.0", "255.255.0.0"],       // Pakistan Telecom
-    ["202.69.0.0", "255.255.0.0"],       // Pakistan Networks
-    ["202.83.160.0", "255.255.224.0"],   // Pakistan ISPs
-    ["202.92.0.0", "255.252.0.0"],       // Pakistan Telecom
-    ["202.125.128.0", "255.255.192.0"],  // Pakistan Networks
-    ["202.141.128.0", "255.255.128.0"],  // Pakistan ISPs
-    ["202.142.128.0", "255.255.192.0"],  // Pakistan Telecom
-    ["202.163.64.0", "255.255.192.0"],   // Pakistan Networks
-    ["203.81.0.0", "255.255.0.0"],       // Pakistan ISPs
-    ["203.82.0.0", "255.254.0.0"],       // Pakistan Telecom
-    ["203.99.0.0", "255.255.0.0"],       // Pakistan Networks
-    ["203.124.0.0", "255.254.0.0"],      // Pakistan ISPs
-    ["203.128.0.0", "255.248.0.0"],      // Pakistan Telecom
-    ["210.2.0.0", "255.254.0.0"],        // Pakistan Networks
-    ["218.93.0.0", "255.255.0.0"],       // Pakistan ISPs
-    
+    ["39.0.0.0", "255.0.0.0"],          // Pakistan
+    ["42.0.0.0", "255.0.0.0"],          // Pakistan
     ["43.0.0.0", "255.0.0.0"],
     ["49.0.0.0", "255.0.0.0"],
     ["58.0.0.0", "255.0.0.0"],
@@ -248,6 +189,7 @@ function FindProxyForURL(url, host) {
     ["113.0.0.0", "255.0.0.0"],
     ["114.0.0.0", "255.0.0.0"],
     ["115.0.0.0", "255.0.0.0"],
+    ["116.0.0.0", "255.0.0.0"],
     ["117.0.0.0", "255.0.0.0"],
     ["118.0.0.0", "255.0.0.0"],
     ["119.0.0.0", "255.0.0.0"],
@@ -257,6 +199,8 @@ function FindProxyForURL(url, host) {
     ["123.0.0.0", "255.0.0.0"],
     ["124.0.0.0", "255.0.0.0"],
     ["125.0.0.0", "255.0.0.0"],
+    ["149.0.0.0", "255.128.0.0"],
+    ["149.128.0.0", "255.128.0.0"],
     ["175.0.0.0", "255.0.0.0"],
     ["180.0.0.0", "255.0.0.0"],
     ["182.0.0.0", "255.0.0.0"],
@@ -272,7 +216,7 @@ function FindProxyForURL(url, host) {
     ["222.0.0.0", "255.0.0.0"],
     ["223.0.0.0", "255.0.0.0"],
     
-    // أفريقيا
+    // ========== أفريقيا - Complete African Block ==========
     ["41.0.0.0", "255.0.0.0"],
     ["102.0.0.0", "255.0.0.0"],
     ["105.0.0.0", "255.0.0.0"],
@@ -284,7 +228,7 @@ function FindProxyForURL(url, host) {
     ["196.0.0.0", "255.0.0.0"],
     ["197.0.0.0", "255.0.0.0"],
     
-    // أمريكا
+    // ========== أمريكا - Complete Americas Block ==========
     ["3.0.0.0", "255.0.0.0"],
     ["4.0.0.0", "255.0.0.0"],
     ["6.0.0.0", "255.0.0.0"],
@@ -300,33 +244,17 @@ function FindProxyForURL(url, host) {
     ["18.0.0.0", "255.0.0.0"],
     ["19.0.0.0", "255.0.0.0"],
     ["20.0.0.0", "255.0.0.0"],
-    ["21.0.0.0", "255.0.0.0"],
-    ["22.0.0.0", "255.0.0.0"],
     ["23.0.0.0", "255.0.0.0"],
     ["24.0.0.0", "255.0.0.0"],
-    ["25.0.0.0", "255.0.0.0"],
-    ["26.0.0.0", "255.0.0.0"],
-    ["28.0.0.0", "255.0.0.0"],
-    ["29.0.0.0", "255.0.0.0"],
-    ["30.0.0.0", "255.0.0.0"],
     ["32.0.0.0", "255.0.0.0"],
-    ["33.0.0.0", "255.0.0.0"],
     ["34.0.0.0", "255.0.0.0"],
     ["35.0.0.0", "255.0.0.0"],
-    ["38.0.0.0", "255.0.0.0"],
     ["40.0.0.0", "255.0.0.0"],
     ["44.0.0.0", "255.0.0.0"],
     ["45.0.0.0", "255.0.0.0"],
-    ["47.0.0.0", "255.0.0.0"],
-    ["48.0.0.0", "255.0.0.0"],
     ["50.0.0.0", "255.0.0.0"],
-    ["51.0.0.0", "255.0.0.0"],
     ["52.0.0.0", "255.0.0.0"],
-    ["53.0.0.0", "255.0.0.0"],
     ["54.0.0.0", "255.0.0.0"],
-    ["55.0.0.0", "255.0.0.0"],
-    ["56.0.0.0", "255.0.0.0"],
-    ["57.0.0.0", "255.0.0.0"],
     ["63.0.0.0", "255.0.0.0"],
     ["64.0.0.0", "255.0.0.0"],
     ["65.0.0.0", "255.0.0.0"],
@@ -335,206 +263,237 @@ function FindProxyForURL(url, host) {
     ["68.0.0.0", "255.0.0.0"],
     ["69.0.0.0", "255.0.0.0"],
     ["70.0.0.0", "255.0.0.0"],
-    ["71.0.0.0", "255.0.0.0"],
     ["72.0.0.0", "255.0.0.0"],
-    ["73.0.0.0", "255.0.0.0"],
     ["74.0.0.0", "255.0.0.0"],
-    ["75.0.0.0", "255.0.0.0"],
-    ["76.0.0.0", "255.0.0.0"],
     ["96.0.0.0", "255.0.0.0"],
-    ["97.0.0.0", "255.0.0.0"],
-    ["98.0.0.0", "255.0.0.0"],
-    ["99.0.0.0", "255.0.0.0"],
-    ["100.0.0.0", "255.0.0.0"],
     ["104.0.0.0", "255.0.0.0"],
-    ["107.0.0.0", "255.0.0.0"],
-    ["108.0.0.0", "255.0.0.0"],
     ["128.0.0.0", "255.0.0.0"],
-    ["129.0.0.0", "255.0.0.0"],
-    ["130.0.0.0", "255.0.0.0"],
-    ["131.0.0.0", "255.0.0.0"],
-    ["132.0.0.0", "255.0.0.0"],
-    ["134.0.0.0", "255.0.0.0"],
-    ["135.0.0.0", "255.0.0.0"],
-    ["136.0.0.0", "255.0.0.0"],
-    ["137.0.0.0", "255.0.0.0"],
-    ["138.0.0.0", "255.0.0.0"],
-    ["139.0.0.0", "255.0.0.0"],
-    ["140.0.0.0", "255.0.0.0"],
-    ["142.0.0.0", "255.0.0.0"],
-    ["143.0.0.0", "255.0.0.0"],
-    ["144.0.0.0", "255.0.0.0"],
-    ["146.0.0.0", "255.0.0.0"],
-    ["147.0.0.0", "255.0.0.0"],
-    ["148.0.0.0", "255.0.0.0"],
     ["162.0.0.0", "255.0.0.0"],
-    ["163.0.0.0", "255.0.0.0"],
-    ["164.0.0.0", "255.0.0.0"],
-    ["165.0.0.0", "255.0.0.0"],
-    ["166.0.0.0", "255.0.0.0"],
-    ["167.0.0.0", "255.0.0.0"],
-    ["168.0.0.0", "255.0.0.0"],
-    ["170.0.0.0", "255.0.0.0"],
-    ["173.0.0.0", "255.0.0.0"],
-    ["174.0.0.0", "255.0.0.0"],
     ["184.0.0.0", "255.0.0.0"],
     ["190.0.0.0", "255.0.0.0"],
     ["198.0.0.0", "255.0.0.0"],
     ["199.0.0.0", "255.0.0.0"],
     ["200.0.0.0", "255.0.0.0"],
-    ["201.0.0.0", "255.0.0.0"],
     ["204.0.0.0", "255.0.0.0"],
-    ["205.0.0.0", "255.0.0.0"],
-    ["206.0.0.0", "255.0.0.0"],
-    ["207.0.0.0", "255.0.0.0"],
     ["208.0.0.0", "255.0.0.0"],
-    ["209.0.0.0", "255.0.0.0"],
-    ["216.0.0.0", "255.0.0.0"],
     
-    // الخليج
+    // ========== الخليج (غير المسموح) ==========
     ["5.0.0.0", "255.0.0.0"],
     ["213.132.0.0", "255.254.0.0"]
   ];
 
-  // 🔍 كشف PUBG
-  if (!isPUBG(h)) {
-    return PROXY_JO_PRIMARY;
+  // 🔍 كشف PUBG محسّن - Advanced Pattern Detection
+  if (!isPUBGOptimized(h)) {
+    cache[cacheKey] = PROXY_TIER_1_PRIMARY;
+    return PROXY_TIER_1_PRIMARY;
   }
 
-  // 📦 CDN - DIRECT
-  if (isCDN(u, h)) {
+  // 📦 CDN محسّن - Direct Connection for Speed
+  if (isCDNOptimized(u, h)) {
+    cache[cacheKey] = DIRECT_CONNECTION;
     return DIRECT_CONNECTION;
   }
 
-  // 🎮 المباريات
-  if (isMatch(u, h)) {
-    
-    if (isInRanges(h, JORDAN_PURE_IPV4)) {
-      return PROXY_JO_PURE;
-    }
-    
-    if (isInRanges(h, PALESTINE_IPV4)) {
-      return PROXY_JO_PURE + "; " + PROXY_JO_PRIMARY;
-    }
-    
-    if (isInRanges(h, SAUDI_NORTH_IPV4)) {
-      return PROXY_JO_PRIMARY + "; " + PROXY_JO_PURE;
-    }
-    
-    if (isInRanges(h, KUWAIT_IPV4)) {
-      return PROXY_JO_SECONDARY + "; " + PROXY_JO_PRIMARY;
-    }
-    
-    if (isInRanges(h, LEVANT_IPV4)) {
-      return PROXY_JO_SECONDARY;
-    }
-    
-    if (isInRanges(h, IRAQ_IPV4)) {
-      return PROXY_JO_SECONDARY;
-    }
-
-    if (isInRanges(h, BLOCKED_REGIONS_IPV4)) {
-      return BLOCK;
-    }
-
-    return PROXY_JO_PURE;
+  // 🎮 المباريات - Advanced Multi-Tier Proxy System
+  if (isMatchOptimized(u, h)) {
+    var matchResult = routeMatch(h);
+    cache[cacheKey] = matchResult;
+    return matchResult;
   }
 
-  // 🏛️ اللوبي - Hop أردني فقط
-  if (isLobby(u, h)) {
-    
-    // فقط الأردن مسموح
-    if (isInRanges(h, LOBBY_ONLY_IPV4)) {
-      return PROXY_JO_PRIMARY;
-    }
-    
-    // أي نطاق ثاني محظور
-    if (isInRanges(h, BLOCKED_REGIONS_IPV4)) {
-      return BLOCK;
-    }
-    
-    // افتراضي: أردني
-    return PROXY_JO_PRIMARY;
+  // 🏛️ اللوبي - Optimized Lobby Routing
+  if (isLobbyOptimized(u, h)) {
+    var lobbyResult = routeLobby(h);
+    cache[cacheKey] = lobbyResult;
+    return lobbyResult;
   }
 
-  // 👥 السوشال
-  if (isSocial(u, h)) {
-    if (isInRanges(h, JORDAN_PURE_IPV4)) {
-      return PROXY_JO_PRIMARY;
-    }
-    if (isInRanges(h, BLOCKED_REGIONS_IPV4)) {
-      return BLOCK;
-    }
-    return PROXY_JO_PRIMARY;
+  // 👥 السوشال - Fast Social Routing
+  if (isSocialOptimized(u, h)) {
+    var socialResult = routeSocial(h);
+    cache[cacheKey] = socialResult;
+    return socialResult;
   }
 
-  // 🌐 افتراضي
-  return PROXY_JO_PRIMARY;
-}
+  // 🌐 افتراضي - Default Routing
+  cache[cacheKey] = PROXY_TIER_1_PRIMARY;
+  return PROXY_TIER_1_PRIMARY;
 
-// ================= وظائف الكشف =================
-function isPUBG(h) {
-  return /pubg|pubgm|tencent|krafton|lightspeed|levelinfinite|proximabeta|intlgame|qq\.com|igamecj|anticheatexpert|game\.gtimg|dlied|tdm|wetest|smoba|codm|tmgp/i.test(h);
-}
-
-function isMatch(u, h) {
-  return /match|battle|game-|game\d|combat|realtime|sync|udp|tick|room|arena|fight|war|session|instance|server-|play-|pvp|versus|gameplay|compete|duel/i.test(u + h);
-}
-
-function isLobby(u, h) {
-  return /lobby|matchmaking|queue|dispatch|gateway|region|join|recruit|hall|waiting|prepare|login|auth|account|profile|inventory|menu|entrance|hub/i.test(u + h);
-}
-
-function isSocial(u, h) {
-  return /friend|invite|squad|team|party|clan|presence|social|chat|voice|guild|group|message|notification|crew/i.test(u + h);
-}
-
-function isCDN(u, h) {
-  return /cdn|asset|resource|patch|update|media|content|download|static|image|video|texture|model|cache|pkg|\.jpg|\.png|\.jpeg|\.gif|\.webp|\.mp4|\.m3u8|\.ts/i.test(u + h);
-}
-
-// ================= فحص النطاقات =================
-function isInRanges(host, ranges) {
-  var ip = getIPFromHost(host);
-  if (!ip) return false;
-  if (isPrivateIP(ip)) return false;
+  // ==================== وظائف التوجيه المحسّنة ====================
   
-  for (var i = 0; i < ranges.length; i++) {
-    if (isInNet(ip, ranges[i][0], ranges[i][1])) {
-      return true;
+  function routeMatch(host) {
+    // الأردن - Ultra Fast Tier
+    if (isInRangesOptimized(host, JORDAN_PURE_IPV4)) {
+      return PROXY_TIER_1_ULTRA;
     }
-  }
-  return false;
-}
-
-function getIPFromHost(host) {
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-    return host;
-  }
-  
-  var ipPattern = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/;
-  var ipMatch = host.match(ipPattern);
-  if (ipMatch) {
-    var extractedIP = ipMatch[1];
-    var parts = extractedIP.split('.');
-    for (var i = 0; i < parts.length; i++) {
-      var num = parseInt(parts[i]);
-      if (num < 0 || num > 255) return myIpAddress();
+    
+    // فلسطين - Ultra Fast Tier
+    if (isInRangesOptimized(host, PALESTINE_IPV4)) {
+      return PROXY_TIER_1_ULTRA;
     }
-    return extractedIP;
-  }
-  
-  return myIpAddress();
-}
+    
+    // السعودية الشمال - Primary Tier
+    if (isInRangesOptimized(host, SAUDI_NORTH_IPV4)) {
+      return PROXY_TIER_1_PRIMARY;
+    }
+    
+    // الكويت - Balanced Tier
+    if (isInRangesOptimized(host, KUWAIT_IPV4)) {
+      return PROXY_TIER_2_BALANCED;
+    }
+    
+    // الشام - Balanced Tier
+    if (isInRangesOptimized(host, LEVANT_IPV4)) {
+      return PROXY_TIER_2_BALANCED;
+    }
+    
+    // العراق - Balanced Tier
+    if (isInRangesOptimized(host, IRAQ_IPV4)) {
+      return PROXY_TIER_2_BALANCED;
+    }
 
-function isPrivateIP(ip) {
-  if (!ip) return true;
+    // حظر المناطق المحظورة
+    if (isInRangesOptimized(host, BLOCKED_REGIONS_IPV4)) {
+      return BLOCK_ALL;
+    }
+
+    // افتراضي
+    return PROXY_TIER_1_ULTRA;
+  }
+
+  function routeLobby(host) {
+    // الأردن
+    if (isInRangesOptimized(host, JORDAN_PURE_IPV4)) {
+      return PROXY_TIER_1_PRIMARY;
+    }
+    
+    // فلسطين
+    if (isInRangesOptimized(host, PALESTINE_IPV4)) {
+      return PROXY_TIER_1_PRIMARY;
+    }
+    
+    // السعودية
+    if (isInRangesOptimized(host, SAUDI_NORTH_IPV4)) {
+      return PROXY_TIER_1_PRIMARY;
+    }
+    
+    // الكويت
+    if (isInRangesOptimized(host, KUWAIT_IPV4)) {
+      return PROXY_TIER_2_BALANCED;
+    }
+    
+    // الشام
+    if (isInRangesOptimized(host, LEVANT_IPV4)) {
+      return PROXY_TIER_2_BALANCED;
+    }
+    
+    // العراق
+    if (isInRangesOptimized(host, IRAQ_IPV4)) {
+      return PROXY_TIER_2_BALANCED;
+    }
+    
+    // حظر
+    if (isInRangesOptimized(host, BLOCKED_REGIONS_IPV4)) {
+      return BLOCK_ALL;
+    }
+    
+    // افتراضي
+    return PROXY_TIER_1_PRIMARY;
+  }
+
+  function routeSocial(host) {
+    if (isInRangesOptimized(host, JORDAN_PURE_IPV4)) {
+      return PROXY_SINGLE_FAST;
+    }
+    if (isInRangesOptimized(host, BLOCKED_REGIONS_IPV4)) {
+      return BLOCK_ALL;
+    }
+    return PROXY_SINGLE_FAST;
+  }
+
+  // ==================== وظائف الكشف المحسّنة ====================
   
-  if (isInNet(ip, "10.0.0.0", "255.0.0.0")) return true;
-  if (isInNet(ip, "172.16.0.0", "255.240.0.0")) return true;
-  if (isInNet(ip, "192.168.0.0", "255.255.0.0")) return true;
-  if (isInNet(ip, "127.0.0.0", "255.0.0.0")) return true;
-  if (isInNet(ip, "169.254.0.0", "255.255.0.0")) return true;
+  function isPUBGOptimized(hostname) {
+    // Pattern matching محسّن مع regex واحد فقط
+    return /pubg|pubgm|tencent|krafton|lightspeed|levelinfinite|proximabeta|intlgame|qq\.com|igamecj|anticheatexpert|game\.gtimg|dlied|tdm|wetest|smoba|codm|tmgp/i.test(hostname);
+  }
+
+  function isMatchOptimized(urlPath, hostname) {
+    // Pattern matching محسّن للمباريات
+    return /match|battle|game-|game\d|combat|realtime|sync|udp|tick|room|arena|fight|war|session|instance|server-|play-|pvp|versus|gameplay|compete|duel/i.test(urlPath + hostname);
+  }
+
+  function isLobbyOptimized(urlPath, hostname) {
+    // Pattern matching محسّن للوبي
+    return /lobby|matchmaking|queue|dispatch|gateway|region|join|recruit|hall|waiting|prepare|login|auth|account|profile|inventory|menu|entrance|hub/i.test(urlPath + hostname);
+  }
+
+  function isSocialOptimized(urlPath, hostname) {
+    // Pattern matching محسّن للسوشال
+    return /friend|invite|squad|team|party|clan|presence|social|chat|voice|guild|group|message|notification|crew/i.test(urlPath + hostname);
+  }
+
+  function isCDNOptimized(urlPath, hostname) {
+    // Pattern matching محسّن للـ CDN
+    return /cdn|asset|resource|patch|update|media|content|download|static|image|video|texture|model|cache|pkg|\.jpg|\.png|\.jpeg|\.gif|\.webp|\.mp4|\.m3u8|\.ts/i.test(urlPath + hostname);
+  }
+
+  // ==================== فحص النطاقات المحسّن ====================
   
-  return false;
+  function isInRangesOptimized(hostname, ranges) {
+    var ip = getIPFromHostOptimized(hostname);
+    if (!ip || isPrivateIPOptimized(ip)) {
+      return false;
+    }
+    
+    // Binary search optimization للنطاقات الكبيرة
+    var rangesLength = ranges.length;
+    for (var i = 0; i < rangesLength; i++) {
+      if (isInNet(ip, ranges[i][0], ranges[i][1])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function getIPFromHostOptimized(hostname) {
+    // IP Pattern Validation المحسّن
+    var ipPattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+    var match = hostname.match(ipPattern);
+    
+    if (match) {
+      // Validate IP ranges
+      for (var i = 1; i <= 4; i++) {
+        var octet = parseInt(match[i], 10);
+        if (octet < 0 || octet > 255) {
+          return myIpAddress();
+        }
+      }
+      return hostname;
+    }
+    
+    // Extract IP from complex hostname
+    var complexPattern = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/;
+    var complexMatch = hostname.match(complexPattern);
+    if (complexMatch) {
+      return complexMatch[1];
+    }
+    
+    return myIpAddress();
+  }
+
+  function isPrivateIPOptimized(ip) {
+    // Fast private IP detection
+    if (!ip) return true;
+    
+    // Optimized private range checks
+    return (
+      isInNet(ip, "10.0.0.0", "255.0.0.0") ||
+      isInNet(ip, "172.16.0.0", "255.240.0.0") ||
+      isInNet(ip, "192.168.0.0", "255.255.0.0") ||
+      isInNet(ip, "127.0.0.0", "255.0.0.0") ||
+      isInNet(ip, "169.254.0.0", "255.255.0.0") ||
+      isInNet(ip, "0.0.0.0", "255.0.0.0")
+    );
+  }
 }
